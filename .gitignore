@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg
+
+# Distribution / packaging
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+.Trashes
+Thumbs.db
+
+# Logs
+*.log
+log/
+
+# Database
+*.sqlite3
+*.db
+
+# Misc
+*.bak
+*.swp
+*~
+.ipynb_checkpoints
