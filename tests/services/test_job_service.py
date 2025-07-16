@@ -5,4 +5,7 @@ def test_job_service_exists():
     
     assert JobService is not None
 
-#
+def test_job_service_list_jobs_stub():
+    
+    with pytest.raises(AttributeError):
+        JobService.list_jobs()
