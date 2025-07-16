@@ -4,10 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Flask-SQLAlchemy = "*"
 Flask-Migrate = "*"
-Flask-JWT-Extended = "*"
-Flask-Bcrypt = "*"
 psycopg2-binary = "*"
 python-dotenv = "*"
 Flask-Marshmallow = "*"
@@ -15,10 +12,14 @@ marshmallow-sqlalchemy = "*"
 Werkzeug = "*"
 pytest = "*"
 flask = "*"
+flask-bcrypt = "*"
+flask-jwt-extended = "*"
+flask-sqlalchemy = "*"
 marshmallow = "*"
 
 [dev-packages]
 pytest = "*"
+flask-testing = "*"
 
 [requires]
 python_version = "3.8"

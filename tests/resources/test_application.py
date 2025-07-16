@@ -25,7 +25,7 @@ def test_create_application(client):
     assert response.get_json()['status'] == 'pending'
 
 def test_get_application(client):
-    # Create application first
+    
     app_obj = JobApplication(job_seeker_id=1, job_posting_id=1)
     db.session.add(app_obj)
     db.session.commit()
