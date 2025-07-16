@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Flask = "*"
 Flask-SQLAlchemy = "*"
 Flask-Migrate = "*"
 Flask-JWT-Extended = "*"
@@ -14,6 +13,9 @@ python-dotenv = "*"
 Flask-Marshmallow = "*"
 marshmallow-sqlalchemy = "*"
 Werkzeug = "*"
+pytest = "*"
+flask = "*"
+marshmallow = "*"
 
 [dev-packages]
 pytest = "*"
