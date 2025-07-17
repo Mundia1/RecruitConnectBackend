@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 from app.schemas.user import UserRegisterSchema, UserLoginSchema, UserSchema
 from app.services.auth_service import AuthService
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models.user import User, db
+from app.models.user import User
+from app.extensions import db, limiter
+from app.utils.helpers import api_response
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -11,34 +13,43 @@ register_schema = UserRegisterSchema()
 login_schema = UserLoginSchema()
 
 @auth_bp.route('/register', methods=['POST'])
+@limiter.limit("5 per minute")
 def register():
     data = request.get_json()
     errors = register_schema.validate(data)
     if errors:
-        return jsonify(errors), 400
+        return api_response(400, "Invalid data", errors)
 
-    user, error = AuthService.register_user(data['email'], data['password'])
+    user, error = AuthService.register_user(data['email'], data['password'], data['first_name'], data['last_name'])
     if error:
-        return jsonify({"error": error}), 400
+        return api_response(400, error)
 
-    return user_schema.dump(user), 201
+    return api_response(201, "User registered successfully", user_schema.dump(user))
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     data = request.get_json()
     errors = login_schema.validate(data)
     if errors:
-        return jsonify(errors), 400
+        return api_response(400, "Invalid data", errors)
 
-    token, user = AuthService.login_user(data['email'], data['password'])
-    if not token:
-        return jsonify({"error": "Invalid credentials"}), 401
+    access_token, refresh_token, user = AuthService.login_user(data['email'], data['password'])
+    if not access_token:
+        return api_response(401, "Invalid credentials")
 
-    return jsonify({"access_token": token, "user": user_schema.dump(user)})
+    return api_response(200, "Login successful", {"access_token": access_token, "refresh_token": refresh_token, "user": user_schema.dump(user)})
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def me():
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    return user_schema.dump(user)
+    user = db.session.get(User, user_id)
+    return api_response(200, "User found", user_schema.dump(user))
+
+@auth_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    current_user = get_jwt_identity()
+    new_access_token = AuthService.refresh_access_token(current_user)
+    return api_response(200, "Token refreshed", {'access_token': new_access_token})
