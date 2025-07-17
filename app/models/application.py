@@ -1,14 +1,17 @@
 from datetime import datetime
-from app import db
+from app.extensions import db
+from sqlalchemy_serializer import SerializerMixin
 
-class JobApplication(db.Model):
-    __tablename__ = 'job_applications'
+class Application(db.Model, SerializerMixin):
+    __tablename__ = 'applications'
+
+    serialize_rules = ('-user.applications', '-job_posting.applications', '-feedback.application')
 
     id = db.Column(db.Integer, primary_key=True)
-    applied_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    status = db.Column(db.String(32), default='pending', nullable=False)
-    job_seeker_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    job_posting_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
+    applied_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(32), nullable=False, default='submitted') # Enum: submitted, viewed, rejected, accepted
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    job_posting_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=False)
 
-    job_seeker = db.relationship('User', backref='applications')
-    job_posting = db.relationship('Job', backref='applications')
+    user = db.relationship('User', backref='applications')
+    job_posting = db.relationship('JobPosting', backref='applications')

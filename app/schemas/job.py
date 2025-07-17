@@ -1,10 +1,11 @@
 from marshmallow import Schema, fields, validate
 
-
-class JobPostingSchema(Schema):
+class JobSchema(Schema):
     id = fields.Int(dump_only=True)
-    title = fields.Str(required=True, validate=validate.Length(min=3))
-    description = fields.Str(required=True, validate=validate.Length(min=10))
-    location = fields.Str(required=True)
-    employer_id = fields.Int(required=True)
-    created_at = fields.DateTime(dump_only=True)
+    title = fields.Str(required=True)
+    description = fields.Str(required=True)
+    location = fields.Str()
+    requirements = fields.Str()
+    deadline = fields.DateTime(format='iso')
+    posted_at = fields.DateTime(dump_only=True)
+    admin_id = fields.Int(required=True)

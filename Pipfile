@@ -16,10 +16,26 @@ flask-bcrypt = "*"
 flask-jwt-extended = "*"
 flask-sqlalchemy = "*"
 marshmallow = "*"
+Flask-Cors = "*"
+Flask-Limiter = "*"
+redis = "*"
+Flask-Caching = "*"
+celery = "*"
+Flask-Mail = "*"
+prometheus-flask-exporter = "*"
+structlog = "*"
+sentry-sdk = {extras = ["flask"], version = "*"}
+requests = "*"
 
 [dev-packages]
 pytest = "*"
 flask-testing = "*"
+pytest-cov = "*"
+pytest-timeout = "*"
+pytest-ordering = "*"
 
 [requires]
 python_version = "3.8"
+
+[scripts]
+test = "pytest --cov=app --cov-report=term-missing"
