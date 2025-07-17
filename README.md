@@ -1,150 +1,161 @@
-# RecruitConnect - Backend
+# RecruitConnect Backend
 
-This document provides a comprehensive guide to the backend of the RecruitConnect application. It is designed to be a single source of truth for developers, covering everything from the initial setup to the architectural design and code quality standards.
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/flask-2.0.1-green.svg)](https://flask.palletsprojects.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-blue.svg)](https://www.postgresql.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+RecruitConnect is a modern recruitment platform that connects job seekers with employers. This repository contains the backend API built with Flask, PostgreSQL, and various modern web technologies.
 
--   **Service-Oriented Architecture**: A modular design that separates concerns into services, resources, models, and schemas.
--   **RESTful API**: A robust, versioned API for managing users, job postings, and applications.
--   **Authentication**: Secure user authentication and authorization using JSON Web Tokens (JWT).
--   **Database**: PostgreSQL for storing all application data.
--   **Code Quality**: Enforced with `ruff` for linting/formatting and `mypy` for static type checking.
+## ✨ Features
 
-## Folder Structure
+- **User Authentication & Authorization**
+  - JWT-based authentication
+  - Role-based access control (Job Seeker, Employer, Admin)
+  - Secure password hashing with bcrypt
 
-```
-├── app/
-│   ├── __init__.py
-│   ├── blueprints/
-│   │   ├── __init__.py
-│   │   └── api_v1.py
-│   ├── models/
-│   ├── resources/
-│   ├── schemas/
-│   ├── services/
-│   ├── tasks/
-│   └── utils/
-├── migrations/
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py
-│   ├── resources/
-│   │   ├── __init__.py
-│   │   ├── test_auth.py
-│   │   ├── test_job.py
-│   │   └── test_application.py
-│   └── services/
-│       ├── __init__.py
-│       ├── test_auth_service.py
-│       ├── test_job_service.py
-│       └── test_application_service.py
-├── .env
-├── .env.example
-├── .gitignore
-├── app.py
-├── config.py
-├── database_schema.md
-├── Pipfile
-├── run.py
-└── seed.py
-```
+- **Job Management**
+  - Create, read, update, and delete job postings
+  - Job search and filtering capabilities
+  - Application tracking system
 
----
+- **Application Processing**
+  - Application submission and status updates
+  - Resume/CV handling
+  - Application review workflow
 
-## Architecture & Design
+- **Enterprise Features**
+  - Email notifications
+  - Background task processing with Celery
+  - Caching with Redis
+  - Monitoring with Prometheus
+  - Error tracking with Sentry
 
-This project follows the **App Factory Pattern**, a best practice for Flask applications that enhances modularity and testability.
+## 🚀 Quick Start
 
-### Core Components
+### Prerequisites
 
--   **`app.py`**: The main entry point for the Flask application. It imports the `create_app` function and starts the server.
--   **`app/__init__.py` (App Factory)**: Contains the `create_app` function, which is responsible for initializing the Flask application, its extensions (e.g., SQLAlchemy, JWT), and registering the API blueprints.
--   **`config.py`**: Implements a class-based configuration structure with separate classes for `Development`, `Testing`, and `Production` environments.
--   **`app/blueprints/api_v1.py`**: Aggregates all the API resources to create the version 1 of the API. This is crucial for versioning.
--   **`app/resources/`**: Defines the API resources (e.g., using Flask-RESTful). Each file handles the HTTP methods for a specific model.
--   **`app/services/`**: Contains the core business logic. Services are called by the resources and interact with the database models.
--   **`app/models/`**: Defines the database tables as Python classes using SQLAlchemy.
--   **`app/schemas/`**: Defines the data serialization and validation schemas using Marshmallow.
+- Python 3.8+
+- PostgreSQL 13+
+- Redis
+- pipenv (for dependency management)
 
-### Database
+### Installation
 
-For a detailed breakdown of the database schema, including table structures, column definitions, and entity relationships, please see the [`database_schema.md`](database_schema.md) file.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/RecruitConnectBackend.git
+   cd RecruitConnectBackend
+   ```
 
----
+2. **Set up environment variables**
+   Copy the example environment file and update the values:
+   ```bash
+   cp .env.example .env
+   ```
+   Update the `.env` file with your configuration (database URLs, secrets, etc.).
 
-## Setup and Installation
+3. **Install dependencies**
+   ```bash
+   pipenv install --dev
+   pipenv shell
+   ```
 
-1.  **Install dependencies from Pipfile:**
-    This will create a virtual environment and install all production and development dependencies.
-    ```bash
-    pipenv install --dev
-    ```
+4. **Set up the database**
+   ```bash
+   flask db upgrade
+   ```
 
-3.  **Activate the virtual environment:**
-    ```bash
-    pipenv shell
-    ```
+5. **Seed initial data (optional)**
+   ```bash
+   python seed.py
+   ```
 
-4.  **Set up environment variables:**
-    Create a `.env` file by copying the example and update the variables with your configuration.
-    ```bash
-    cp .env.example .env
-    ```
+6. **Run the development server**
+   ```bash
+   python run.py
+   ```
 
-5.  **Set up the PostgreSQL Database:**
-    -   Ensure your PostgreSQL server is running.
-    -   Create a new database for the project (e.g., `recruitconnect_db`).
-    -   Update the `DATABASE_URL` in your `.env` file.
+   The API will be available at `http://localhost:5000`
 
-6.  **Run database migrations:**
-    ```bash
-    pipenv run flask db init
-    pipenv run flask db migrate -m "Initial migration"
-    pipenv run flask db upgrade
-    ```
+## 📚 API Documentation
 
-7.  **Seed the database (optional):**
-    ```bash
-    pipenv run python seed.py
-    ```
+API documentation is available at `/api/docs` when running the development server.
 
-8.  **Run the application:**
-    The `--debug` flag enables the Flask debugger and reloader.
-    ```bash
-    pipenv run flask run --debug
-    ```
+## 🧪 Testing
 
----
+Run the test suite with:
 
-## Development Workflow & Collaboration
-
-For detailed information on task assignments, Git branching strategy, and best practices for collaborative development, please refer to the [`docs/workflow.md`](docs/workflow.md) file.
-
----
-
-## Code Quality & Testing
-
-To maintain a high-quality and reliable codebase, this project uses `ruff` for linting and formatting, and `mypy` for static type checking.
-
-### Running Quality Checks
-
--   **Lint and format the code:**
-    ```bash
-    pipenv run ruff check . --fix
-    pipenv run ruff format .
-    ```
-
--   **Run static type checking:**
-    ```bash
-    pipenv run mypy .
-    ```
-
-### Running Tests
-
-To run the full test suite:
 ```bash
-pipenv run pytest
+pytest
 ```
 
----
+## 🛠️ Development
+
+### Project Structure
+
+```
+RecruitConnectBackend/
+├── app/                    # Application package
+│   ├── __init__.py         # Application factory
+│   ├── models/             # Database models
+│   ├── resources/          # API resources/endpoints
+│   ├── services/           # Business logic
+│   ├── schemas/            # Marshmallow schemas
+│   └── utils/              # Helper functions
+├── migrations/             # Database migrations
+├── tests/                  # Test files
+├── config.py               # Configuration settings
+├── run.py                  # Application entry point
+├── seed.py                 # Database seeding script
+└── Pipfile                # Dependencies
+```
+
+### Environment Variables
+
+Key environment variables:
+
+- `FLASK_ENV`: Application environment (development, testing, production)
+- `DATABASE_URL`: PostgreSQL connection string
+- `TEST_DATABASE_URL`: Test database connection string
+- `SECRET_KEY`: Flask secret key
+- `JWT_SECRET_KEY`: JWT signing key
+- `REDIS_URL`: Redis connection URL
+- `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`: Email server configuration
+- `SENTRY_DSN`: Sentry DSN for error tracking
+
+## 🚀 Deployment
+
+### Production
+
+1. Set `FLASK_ENV=production` in your environment
+2. Configure a production-ready WSGI server (Gunicorn, uWSGI)
+3. Set up a reverse proxy (Nginx, Apache)
+4. Configure SSL/TLS
+
+Example with Gunicorn:
+```bash
+gunicorn --bind 0.0.0.0:5000 wsgi:app
+```
+
+### Docker
+
+1. Build the Docker image:
+   ```bash
+   docker build -t recruitconnect-backend .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -p 5000:5000 --env-file .env recruitconnect-backend
+   ```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
 
