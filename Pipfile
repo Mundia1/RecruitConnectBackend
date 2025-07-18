@@ -26,6 +26,7 @@ prometheus-flask-exporter = "*"
 structlog = "*"
 sentry-sdk = {extras = ["flask"], version = "*"}
 requests = "*"
+gunicorn = "*"
 
 [dev-packages]
 pytest = "*"
