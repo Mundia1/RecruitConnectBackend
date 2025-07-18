@@ -64,6 +64,20 @@ def test_create_job_posting_invalid_data(client, mock_job_service):
     assert "admin_id" in response.json['data']
     mock_job_service.create_job.assert_not_called()
 
+def test_create_job_posting_exception(client, mock_job_service):
+    mock_job_service.create_job.side_effect = Exception("Database connection error")
+    job_data = {
+        "title": "Software Engineer",
+        "description": "Develop software",
+        "requirements": "Python",
+        "location": "Remote",
+        "admin_id": 1
+    }
+    response = client.post('/api/v1/jobs/', data=json.dumps(job_data), content_type='application/json')
+    assert response.status_code == 500
+    assert response.json['message'] == "Error creating job"
+    assert response.json['data'] == "Database connection error"
+
 def test_get_jobs_success(client, mock_job_service):
     mock_job_service.get_all_jobs.return_value = [
         {"id": 1, "title": "Job 1", "description": "Desc 1", "requirements": "Req 1", "location": "Loc 1", "admin_id": 1},

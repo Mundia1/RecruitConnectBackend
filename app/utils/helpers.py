@@ -6,6 +6,6 @@ def api_response(status_code, message, data=None):
         "message": message,
         "data": data
     }
-    if status_code == 204:
-        return '', 204
+    if data is None:
+        del response["data"]
     return jsonify(response), status_code

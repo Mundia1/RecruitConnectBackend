@@ -1,12 +1,16 @@
 from app.models.application import Application
 from app.extensions import db
 from werkzeug.exceptions import NotFound
+from app.services.job_service import JobService
 
 class ApplicationService:
     @staticmethod
     def create_application(user_id, job_posting_id):
+        existing_application = Application.query.filter_by(user_id=user_id, job_posting_id=job_posting_id).first()
+        if existing_application:
+            return None
+
         # First check if the job exists
-        from app.services.job_service import JobService
         try:
             job = JobService.get_job_by_id(job_posting_id)
             # If we get here, the job exists
@@ -27,6 +31,10 @@ class ApplicationService:
 
     @staticmethod
     def update_application_status(application_id, status):
+        valid_statuses = ['submitted', 'under_review', 'accepted', 'rejected', 'withdrawn']
+        if status not in valid_statuses:
+            raise ValueError(f"Invalid status: {status}. Valid statuses are: {valid_statuses}")
+
         application = db.session.get(Application, application_id)
         if application is None:
             raise NotFound(f"Application with ID {application_id} not found")
