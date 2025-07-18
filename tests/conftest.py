@@ -4,10 +4,9 @@ import datetime
 from app import create_app, db
 from sqlalchemy import create_engine
 from config import TestingConfig
-from app.models.user import User
-from app.models.job import JobPosting
 from app.models.application import Application
 from unittest.mock import patch
+from tests.factories import create_user, create_job_posting
 
 os.environ['SENTRY_DSN'] = 'http://public@example.com/1'
 
@@ -48,53 +47,28 @@ def init_database(app):
         db.drop_all()
         db.create_all()
 
+        from tests.factories import create_user, create_job_posting
+
         # Create test users
-        user1 = User(
-            email="test1@example.com",
-            first_name="Test",
-            last_name="User1",
-            role="job_seeker"
-        )
-        user1.set_password("password")
-
-        user2 = User(
-            email="test2@example.com",
-            first_name="Test",
-            last_name="User2",
-            role="job_seeker"
-        )
-        user2.set_password("password")
-
-        recruiter = User(
-            email="recruiter@example.com",
-            first_name="Test",
-            last_name="Recruiter",
-            role="admin"
-        )
-        recruiter.set_password("password")
-
-        db.session.add_all([user1, user2, recruiter])
-        db.session.commit()
+        user1 = create_user("test1@example.com", "password", "Test", "User1", "job_seeker")
+        user2 = create_user("test2@example.com", "password", "Test", "User2", "job_seeker")
+        recruiter = create_user("recruiter@example.com", "password", "Test", "Recruiter", "admin")
 
         # Create test job postings
-        job_posting1 = JobPosting(
+        job_posting1 = create_job_posting(
             title="Test Job 1",
             description="Description for test job 1",
             location="Test Location 1",
             requirements="Test Requirements 1",
-            deadline=datetime.datetime.utcnow() + datetime.timedelta(days=10),
             admin_id=recruiter.id
         )
-        job_posting2 = JobPosting(
+        job_posting2 = create_job_posting(
             title="Test Job 2",
             description="Description for test job 2",
             location="Test Location 2",
             requirements="Test Requirements 2",
-            deadline=datetime.datetime.utcnow() + datetime.timedelta(days=20),
             admin_id=recruiter.id
         )
-        db.session.add_all([job_posting1, job_posting2])
-        db.session.commit()
 
         yield db
         db.session.remove()
@@ -108,15 +82,13 @@ def employer(app):
         if existing_user:
             return existing_user
             
-        recruiter = User(
+        recruiter = create_user(
             email="employer@example.com",
+            password="password",
             first_name="Employer",
             last_name="User",
             role="admin"
         )
-        recruiter.set_password("password")
-        db.session.add(recruiter)
-        db.session.commit()
         return recruiter
 
 @pytest.fixture(scope='function')
@@ -125,17 +97,13 @@ def job_posting(app, employer):
         # Get a fresh employer object within the session
         employer = User.query.get(employer.id)
         
-        job = JobPosting(
+        job = create_job_posting(
             title="Fixture Job",
             description="Description for fixture job",
             location="Test Location",
             requirements="Test Requirements",
-            deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
             admin_id=employer.id
         )
-        db.session.add(job)
-        db.session.commit()
-        return job
 
 @pytest.fixture(autouse=True)
 def mock_celery_task():

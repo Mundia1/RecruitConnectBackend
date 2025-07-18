@@ -150,6 +150,67 @@ gunicorn --bind 0.0.0.0:5000 wsgi:app
    docker run -p 5000:5000 --env-file .env recruitconnect-backend
    ```
 
+## 📚 API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `POST` | `/auth/register` | Register a new user | None |
+| `POST` | `/auth/login` | User login | None |
+| `POST` | `/auth/refresh` | Refresh access token | Refresh Token |
+| `GET`  | `/auth/me` | Get current user info | JWT Token |
+
+### Jobs
+
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `GET`    | `/jobs` | Get all jobs | None |
+| `POST`   | `/jobs` | Create a new job posting | JWT Token (Admin) |
+| `GET`    | `/jobs/<int:job_id>` | Get job by ID | None |
+| `PATCH`  | `/jobs/<int:job_id>` | Update job | JWT Token (Admin) |
+| `DELETE` | `/jobs/<int:job_id>` | Delete job | JWT Token (Admin) |
+
+### Applications
+
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `GET`    | `/applications` | Get all applications (filter by user_id or job_posting_id) | JWT Token |
+| `POST`   | `/applications` | Create new application | JWT Token |
+| `GET`    | `/applications/<int:application_id>` | Get application by ID | JWT Token |
+| `PATCH`  | `/applications/<int:application_id>` | Update application status | JWT Token (Admin/Recruiter) |
+| `DELETE` | `/applications/<int:application_id>` | Delete application | JWT Token (Admin) |
+
+### Messages
+
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `GET`    | `/messages/between/<int:user1_id>/<int:user2_id>` | Get messages between two users | JWT Token |
+| `POST`   | `/messages` | Send a new message | JWT Token |
+| `GET`    | `/messages/<int:message_id>` | Get message by ID | JWT Token |
+| `PATCH`  | `/messages/<int:message_id>/read` | Mark message as read | JWT Token |
+| `DELETE` | `/messages/<int:message_id>` | Delete message | JWT Token |
+
+### Feedback
+
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `GET`    | `/feedback/application/<int:job_application_id>` | Get feedback for application | JWT Token |
+| `POST`   | `/feedback` | Submit new feedback | JWT Token |
+| `GET`    | `/feedback/<int:feedback_id>` | Get feedback by ID | JWT Token |
+| `PATCH`  | `/feedback/<int:feedback_id>` | Update feedback | JWT Token |
+| `DELETE` | `/feedback/<int:feedback_id>` | Delete feedback | JWT Token (Admin) |
+
+### FAQ
+
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| `GET`    | `/faq` | Get all FAQs | None |
+| `POST`   | `/faq` | Create new FAQ | JWT Token (Admin) |
+| `GET`    | `/faq/<int:faq_id>` | Get FAQ by ID | None |
+| `PATCH`  | `/faq/<int:faq_id>` | Update FAQ | JWT Token (Admin) |
+| `DELETE` | `/faq/<int:faq_id>` | Delete FAQ | JWT Token (Admin) |
+
 ## 🤝 Contributing
 
 1. Fork the repository

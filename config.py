@@ -22,6 +22,7 @@ class Config:
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+    RATELIMIT_STORAGE_URL = os.getenv('RATELIMIT_STORAGE_URL', 'redis://localhost:6379/3')
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -32,6 +33,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL')
+    RATELIMIT_STORAGE_URL = os.getenv('TEST_RATELIMIT_STORAGE_URL', 'redis://localhost:6379/4')
     TALISMAN_FORCE_HTTPS = False
     CELERY_ALWAYS_EAGER = True
     if not SQLALCHEMY_DATABASE_URI:
