@@ -1,9 +1,10 @@
 from flask import Blueprint, request
+from app.utils.decorators import rate_limit
 from app.schemas.user import UserRegisterSchema, UserLoginSchema, UserSchema
 from app.services.auth_service import AuthService
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.user import User
-from app.extensions import db, limiter
+from app.extensions import db
 from app.utils.helpers import api_response
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -13,7 +14,7 @@ register_schema = UserRegisterSchema()
 login_schema = UserLoginSchema()
 
 @auth_bp.route('/register', methods=['POST'])
-@limiter.limit("5 per minute")
+@rate_limit("5 per minute")
 def register():
     data = request.get_json()
     errors = register_schema.validate(data)
@@ -27,7 +28,7 @@ def register():
     return api_response(201, "User registered successfully", user_schema.dump(user))
 
 @auth_bp.route('/login', methods=['POST'])
-@limiter.limit("5 per minute")
+@rate_limit("5 per minute")
 def login():
     data = request.get_json()
     errors = login_schema.validate(data)

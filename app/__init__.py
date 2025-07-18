@@ -1,14 +1,17 @@
 import os
 import structlog
 import sentry_sdk
-from flask import Flask
+from flask import Flask, request
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from config import config_by_name
 from app.utils.logging import configure_logging
 from app.utils.error_handlers import register_error_handlers
 from app.blueprints.api_v1 import api_v1_bp
-from app.extensions import db, migrate, jwt, cors, talisman, limiter, cache, mail, metrics, celery
+from app.extensions import db, migrate, jwt, cors, talisman, cache, mail, metrics, celery, rate_limit_counter
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 def create_app(config_name):
     configure_logging()
@@ -27,11 +30,23 @@ def create_app(config_name):
     migrate.init_app(app, db)
     jwt.init_app(app)
     cors.init_app(app)
-    
+
+    limiter = Limiter(
+        key_func=get_remote_address,
+        storage_uri=app.config.get('RATELIMIT_STORAGE_URL'),
+        storage_options={"socket_connect_timeout": 30},
+        default_limits=["200 per day", "50 per hour"],
+        on_breach=lambda limit: rate_limit_counter.inc({'endpoint': request.endpoint})
+    )
     limiter.init_app(app)
+    app.limiter = limiter
     cache.init_app(app)
     mail.init_app(app)
     metrics.init_app(app)
+
+    
+
+    
 
     celery.conf.update(app.config)
 

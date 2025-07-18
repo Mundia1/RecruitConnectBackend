@@ -3,8 +3,6 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_talisman import Talisman
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 from celery import Celery
 from flask_mail import Mail
@@ -18,12 +16,13 @@ migrate = Migrate()
 jwt = JWTManager()
 cors = CORS()
 talisman = Talisman()
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
-)
 cache = Cache()
 mail = Mail()
 metrics = PrometheusMetrics.for_app_factory()
+rate_limit_counter = metrics.counter(
+    'flask_rate_limit_total',
+    'Total number of times the rate limit was reached',
+    labels={'endpoint': lambda: request.endpoint}
+)
 celery = Celery(__name__)
 bcrypt = Bcrypt()
