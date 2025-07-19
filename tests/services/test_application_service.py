@@ -64,19 +64,35 @@ def test_get_all_applications(init_database):
     assert len(applications) == 3
 
 def test_update_application_status(init_database):
-    user = init_database.session.query(User).filter_by(email="test1@example.com").first()
-    job = init_database.session.query(JobPosting).filter_by(title="Test Job 1").first()
-    created_application = ApplicationService.create_application(user.id, job.id)
-    init_database.session.commit()
-
-    updated_application = ApplicationService.update_application_status(
-        created_application.id, "accepted"
-    )
-    assert updated_application is not None
-    assert updated_application.status == "accepted"
-
-    retrieved_application = init_database.session.get(Application, created_application.id)
-    assert retrieved_application.status == "accepted"
+    # Use the existing database session from the fixture
+    db = init_database
+    
+    # Create test data
+    user = db.session.query(User).filter_by(email="test1@example.com").first()
+    job = db.session.query(JobPosting).filter_by(title="Test Job 1").first()
+    
+    # Create application
+    application = ApplicationService.create_application(user.id, job.id)
+    db.session.commit()
+    
+    try:
+        # Update the application status
+        updated_application = ApplicationService.update_application_status(
+            application.id, "accepted"
+        )
+        
+        # Verify the update
+        assert updated_application is not None
+        assert updated_application.status == "accepted"
+        
+        # Refresh from database to verify
+        db.session.refresh(updated_application)
+        assert updated_application.status == "accepted"
+        
+    finally:
+        # Clean up
+        if db.session.is_active:
+            db.session.rollback()
 
 def test_update_nonexistent_application(init_database):
     with pytest.raises(NotFound) as exc_info:

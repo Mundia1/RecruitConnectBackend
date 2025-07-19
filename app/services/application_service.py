@@ -6,6 +6,12 @@ from app.services.job_service import JobService
 class ApplicationService:
     @staticmethod
     def create_application(user_id, job_posting_id):
+        # Validate input parameters
+        if user_id is None:
+            raise ValueError("User ID cannot be None")
+        if job_posting_id is None:
+            raise ValueError("Job posting ID cannot be None")
+            
         # Check for existing application
         existing_application = Application.query.filter_by(user_id=user_id, job_posting_id=job_posting_id).first()
         if existing_application:
@@ -41,17 +47,54 @@ class ApplicationService:
         return application
 
     @staticmethod
-    def update_application_status(application_id, status):
+    def update_application_status(application_id, status, simulate_delay=False):
+        """
+        Update the status of an application.
+        
+        Args:
+            application_id: The ID of the application to update
+            status: The new status
+            simulate_delay: If True, adds a small delay to help simulate race conditions in tests
+            
+        Returns:
+            The updated application
+            
+        Raises:
+            ValueError: If the status is invalid
+            NotFound: If the application is not found
+        """
         valid_statuses = ['submitted', 'under_review', 'accepted', 'rejected', 'withdrawn']
         if status not in valid_statuses:
             raise ValueError(f"Invalid status: {status}. Valid statuses are: {valid_statuses}")
 
-        application = db.session.get(Application, application_id)
-        if application is None:
-            raise NotFound(f"Application with ID {application_id} not found")
-        application.status = status
-        db.session.commit()
-        return application
+        try:
+            # Get the application with a row-level lock
+            application = (
+                db.session.query(Application)
+                .filter(Application.id == application_id)
+                .with_for_update()
+                .first()
+            )
+            
+            if application is None:
+                raise NotFound(f"Application with ID {application_id} not found")
+            
+            # Add a small delay to help simulate race conditions in tests
+            if simulate_delay:
+                import time
+                time.sleep(0.5)
+            
+            # Update the status
+            application.status = status
+            
+            # Always commit the transaction
+            db.session.commit()
+            
+            return application
+            
+        except Exception as e:
+            db.session.rollback()
+            raise e
 
     @staticmethod
     def delete_application(application_id):

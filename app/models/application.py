@@ -13,5 +13,5 @@ class Application(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     job_posting_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=False)
 
-    user = db.relationship('User', backref='applications')
-    job_posting = db.relationship('JobPosting', backref='applications')
+    user = db.relationship('User', backref=db.backref('applications', cascade='all, delete-orphan'))
+    job_posting = db.relationship('JobPosting', backref=db.backref('applications', cascade='all, delete-orphan'))
