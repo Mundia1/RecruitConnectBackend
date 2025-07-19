@@ -7,7 +7,7 @@ from app.models.faq import FAQ
 from app.models.feedback import Feedback
 from app.models.message import Message
 
-def create_user(email, password, first_name, last_name, role):
+def create_user(email='test@example.com', password='testpass', first_name='Test', last_name='User', role='applicant'):
     user = User(
         email=email,
         first_name=first_name,
@@ -18,6 +18,9 @@ def create_user(email, password, first_name, last_name, role):
     db.session.add(user)
     db.session.commit()
     return user
+
+def create_admin_user(email='admin@example.com', password='adminpass', first_name='Admin', last_name='User'):
+    return create_user(email, password, first_name, last_name, role='admin')
 
 def create_job_posting(title, description, location, requirements, admin_id, deadline=None):
     if deadline is None:

@@ -5,6 +5,8 @@ from app import create_app, db
 from sqlalchemy import create_engine
 from config import TestingConfig
 from app.models.application import Application
+from app.models.user import User  # Add this import
+from app.models.job import JobPosting  # Add this import
 from unittest.mock import patch
 from tests.factories import create_user, create_job_posting
 
@@ -14,6 +16,9 @@ os.environ['SENTRY_DSN'] = 'http://public@example.com/1'
 def app():
     # Create app with testing config
     app = create_app('testing')
+    
+    # Enable rate limiting with higher limits for testing
+    app.config['RATELIMIT_ENABLED'] = True
     
     # Create all tables
     with app.app_context():
@@ -94,16 +99,19 @@ def employer(app):
 @pytest.fixture(scope='function')
 def job_posting(app, employer):
     with app.app_context():
-        # Get a fresh employer object within the session
-        employer = User.query.get(employer.id)
+        # Ensure employer is in the current session
+        employer = db.session.merge(employer)
         
+        # Create and return a job posting
         job = create_job_posting(
             title="Fixture Job",
             description="Description for fixture job",
             location="Test Location",
             requirements="Test Requirements",
-            admin_id=employer.id
+            admin_id=employer.id,
+            deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30)
         )
+        return job
 
 @pytest.fixture(autouse=True)
 def mock_celery_task():

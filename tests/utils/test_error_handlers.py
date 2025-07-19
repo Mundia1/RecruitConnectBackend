@@ -40,24 +40,24 @@ def client_for_errors(app_for_errors):
 def test_bad_request(client_for_errors):
     response = client_for_errors.get('/test-400')
     assert response.status_code == 400
-    assert response.json == {"error": "Bad request"}
+    assert response.json == {"message": "Bad request"}
 
 def test_unauthorized(client_for_errors):
     response = client_for_errors.get('/test-401')
     assert response.status_code == 401
-    assert response.json == {"error": "Unauthorized"}
+    assert response.json == {"message": "Unauthorized"}
 
 def test_forbidden(client_for_errors):
     response = client_for_errors.get('/test-403')
     assert response.status_code == 403
-    assert response.json == {"error": "Forbidden"}
+    assert response.json == {"message": "Forbidden"}
 
 def test_not_found(client_for_errors):
     response = client_for_errors.get('/test-404')
     assert response.status_code == 404
-    assert response.json == {"error": "Not found"}
+    assert response.json == {"message": "Not found"}
 
 def test_internal_server_error(client_for_errors):
     response = client_for_errors.get('/test-500')
     assert response.status_code == 500
-    assert response.json == {"error": "Internal server error"}
+    assert response.json == {"message": "Internal server error"}

@@ -1,15 +1,25 @@
 from flask import Blueprint, request
 from app.schemas.job import JobSchema
 from app.services.job_service import JobService
-from app.extensions import cache
+from app.extensions import db, cache
+from app.metrics import metrics
 from app.utils.helpers import api_response
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.models.user import User
 
 job_bp = Blueprint('job', __name__, url_prefix='/jobs')
 job_schema = JobSchema()
 jobs_schema = JobSchema(many=True)
 
 @job_bp.route('/', methods=['POST'])
+@jwt_required()
 def create_job_posting():
+    current_user_id = get_jwt_identity()
+    current_user = db.session.get(User, current_user_id)
+
+    if not current_user or current_user.role != 'admin':
+        return api_response(403, "Forbidden: Admins only")
+
     print("create_job_posting function entered") # Debug print
     data = request.get_json()
     print(f"Received data in resource: {data}") # Debug print
