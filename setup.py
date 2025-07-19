@@ -26,7 +26,6 @@ setup(
         'sentry-sdk[flask]',
         'requests',
         'gunicorn',
-        'tzdata;python_version<"3.9"',
     ],
     extras_require={
         'dev': [
