@@ -44,8 +44,15 @@ log/
 *.sqlite3
 *.db
 
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
 # Misc
 *.bak
 *.swp
 *~
 .ipynb_checkpoints
+

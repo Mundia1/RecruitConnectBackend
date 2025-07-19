@@ -6,18 +6,29 @@ from app.services.job_service import JobService
 class ApplicationService:
     @staticmethod
     def create_application(user_id, job_posting_id):
+        # Check for existing application
         existing_application = Application.query.filter_by(user_id=user_id, job_posting_id=job_posting_id).first()
         if existing_application:
             return None
 
-        # First check if the job exists
+        # Check if the job exists and is not expired
         try:
             job = JobService.get_job_by_id(job_posting_id)
-            # If we get here, the job exists
+            
+            # Check if job has expired
+            from datetime import datetime
+            if job.deadline and job.deadline < datetime.utcnow():
+                raise ValueError("Cannot apply to an expired job posting")
+            
+            # If we get here, the job exists and is not expired
             application = Application(user_id=user_id, job_posting_id=job_posting_id)
             db.session.add(application)
             db.session.commit()
             return application
+            
+        except ValueError as e:
+            # Re-raise validation errors
+            raise ValueError(str(e))
         except NotFound as e:
             # Re-raise with a more specific message
             raise NotFound(f"Cannot create application: {str(e)}")

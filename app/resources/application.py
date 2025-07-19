@@ -26,10 +26,13 @@ def create_application():
     if not job_posting:
         return api_response(400, "Invalid data", {'job_posting_id': ['Job posting not found']})
 
-    application = ApplicationService.create_application(data['user_id'], data['job_posting_id'])
-    if application is None:
-        return api_response(400, "Invalid data", {'user_id': ['Application already exists for this user and job']})
-    return api_response(201, "Application created successfully", application_schema.dump(application))
+    try:
+        application = ApplicationService.create_application(data['user_id'], data['job_posting_id'])
+        if application is None:
+            return api_response(400, "Invalid data", {'user_id': ['Application already exists for this user and job']})
+        return api_response(201, "Application created successfully", application_schema.dump(application))
+    except ValueError as e:
+        return api_response(400, str(e))
 
 @application_bp.route('/<int:application_id>', methods=['GET'])
 def get_application(application_id):

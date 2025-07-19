@@ -19,10 +19,5 @@ talisman = Talisman()
 cache = Cache()
 mail = Mail()
 metrics = PrometheusMetrics.for_app_factory()
-rate_limit_counter = metrics.counter(
-    'flask_rate_limit_total',
-    'Total number of times the rate limit was reached',
-    labels={'endpoint': lambda: request.endpoint}
-)
 celery = Celery(__name__)
 bcrypt = Bcrypt()
