@@ -5,7 +5,7 @@ from marshmallow.fields import Email
 class UserSchema(Schema):
     id = fields.Int(dump_only=True)
     email = fields.Email(required=True)
-    role = fields.Str(validate=validate.OneOf(['job_seeker', 'admin']))
+    role = fields.Str(validate=validate.OneOf(['job_seeker', 'employer', 'admin']))
     first_name = fields.Str()
     last_name = fields.Str()
     profile_picture = fields.Str()

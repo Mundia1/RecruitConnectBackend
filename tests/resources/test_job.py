@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 from app import create_app
 from app.extensions import cache
 from app.services.auth_service import AuthService
+from app.services.job_view_service import JobViewService
 from tests.factories import create_user
 
 
@@ -112,7 +113,7 @@ def test_create_job_posting_non_admin(app, client, mock_job_service, job_seeker_
     }
     response = client.post('/api/v1/jobs/', data=json.dumps(job_data), content_type='application/json', headers=job_seeker_auth_header)
     assert response.status_code == 403
-    assert response.json['message'] == "Forbidden: Admins only"
+    assert response.json['message'] == "Forbidden: Only Admins or Employers can create job postings"
     mock_job_service.create_job.assert_not_called()
 
 def test_get_jobs_success(app, client, mock_job_service):
@@ -141,12 +142,14 @@ def test_get_job_success(app, client, mock_job_service):
         "admin_id": 1
     }
     
-    response = client.get('/api/v1/jobs/1')
-    
-    assert response.status_code == 200
-    assert response.json['message'] == "Job found"
-    assert response.json['data']['title'] == "Software Engineer"
-    mock_job_service.get_job_by_id.assert_called_once_with(1)
+    with patch('app.resources.job.JobViewService.record_view') as mock_record_view:
+        response = client.get('/api/v1/jobs/1')
+        
+        assert response.status_code == 200
+        assert response.json['message'] == "Job found"
+        assert response.json['data']['title'] == "Software Engineer"
+        mock_job_service.get_job_by_id.assert_called_once_with(1)
+        mock_record_view.assert_called_once_with(1)
 
 def test_get_job_not_found(app, client, mock_job_service):
     with app.app_context():

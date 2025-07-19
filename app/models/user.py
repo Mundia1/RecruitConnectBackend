@@ -2,6 +2,7 @@ from datetime import datetime
 from app.extensions import db
 from app.extensions import bcrypt
 from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy.dialects import postgresql
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
@@ -11,7 +12,7 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False) # Increased length to 255
-    role = db.Column(db.String(50), default='job_seeker') # Enum: job_seeker, admin
+    role = db.Column(postgresql.ENUM('job_seeker', 'employer', 'admin', name='user_role_enum'), default='job_seeker')
     first_name = db.Column(db.String(100))
     last_name = db.Column(db.String(100))
     profile_picture = db.Column(db.Text)

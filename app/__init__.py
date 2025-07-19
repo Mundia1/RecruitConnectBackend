@@ -1,7 +1,8 @@
 import os
 import structlog
 import sentry_sdk
-from flask import Flask, request
+from flask import Flask, request, g
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from config import config_by_name
@@ -31,6 +32,20 @@ def create_app(config_name):
     migrate.init_app(app, db)
     jwt.init_app(app)
     cors.init_app(app)
+
+    from app.models.user import User
+
+    @app.before_request
+    def load_logged_in_user():
+        g.current_user = None
+        try:
+            verify_jwt_in_request(optional=True)
+            user_id = get_jwt_identity()
+            if user_id:
+                g.current_user = db.session.get(User, user_id)
+        except Exception:
+            # Log the exception if necessary, but don't block the request
+            pass
 
     # Initialize metrics before rate limiter
     metrics.init_app(app)

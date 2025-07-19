@@ -28,7 +28,7 @@ def test_create_duplicate_application(client, app, employer, job_posting):
             password='testpass',
             first_name='Test',
             last_name='User',
-            role='applicant'
+            role='job_seeker'
         )
         db.session.add(user)
         db.session.commit()
@@ -58,7 +58,7 @@ def application(app, employer, job_posting):
             password='testpass',
             first_name='Test',
             last_name='User',
-            role='applicant'
+            role='job_seeker'
         )
         db.session.add(user)
         
