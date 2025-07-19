@@ -7,7 +7,7 @@ from app.models.faq import FAQ
 from app.models.feedback import Feedback
 from app.models.message import Message
 
-def create_user(email='test@example.com', password='testpass', first_name='Test', last_name='User', role='applicant'):
+def create_user(email='test@example.com', password='testpass', first_name='Test', last_name='User', role='job_seeker'):
     user = User(
         email=email,
         first_name=first_name,

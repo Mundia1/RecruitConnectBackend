@@ -5,6 +5,7 @@ from app.models.application import Application
 from app.models.message import Message
 from app.models.feedback import Feedback
 from app.models.faq import FAQ
+from app.models.job_view import JobView
 import datetime
 
 def seed_data():
@@ -12,7 +13,8 @@ def seed_data():
     with app.app_context():
         print("Seeding database...")
 
-        # Clear existing data
+        # Clear existing data in a specific order to avoid foreign key constraints
+        db.session.remove()
         db.drop_all()
         db.create_all()
 
@@ -47,7 +49,17 @@ def seed_data():
         )
         admin_user.set_password("adminpass")
 
-        db.session.add_all([user1, user2, admin_user])
+        employer_user = User(
+            email="employer@example.com",
+            first_name="Employer",
+            last_name="User",
+            role="employer",
+            created_at=datetime.datetime.utcnow(),
+            updated_at=datetime.datetime.utcnow()
+        )
+        employer_user.set_password("employerpass")
+
+        db.session.add_all([user1, user2, admin_user, employer_user])
         db.session.commit()
         print("Users created.")
 
@@ -68,7 +80,7 @@ def seed_data():
             requirements="MS in Data Science, 5+ years experience",
             deadline=datetime.datetime.utcnow() + datetime.timedelta(days=45),
             posted_at=datetime.datetime.utcnow(),
-            admin_id=admin_user.id
+            admin_id=employer_user.id # Linked to employer
         )
         db.session.add_all([job_posting1, job_posting2])
         db.session.commit()
@@ -112,7 +124,14 @@ def seed_data():
             sent_at=datetime.datetime.utcnow(),
             is_read=True
         )
-        db.session.add_all([message1, message2])
+        message3 = Message(
+            sender_id=user2.id,
+            receiver_id=employer_user.id,
+            content="Applying for Data Scientist role.",
+            sent_at=datetime.datetime.utcnow(),
+            is_read=False
+        )
+        db.session.add_all([message1, message2, message3])
         db.session.commit()
         print("Messages created.")
 
@@ -124,7 +143,14 @@ def seed_data():
             comment="Good candidate, but lacks experience in X.",
             created_at=datetime.datetime.utcnow()
         )
-        db.session.add(feedback1)
+        feedback2 = Feedback(
+            user_id=employer_user.id,
+            job_application_id=application3.id,
+            rating=5,
+            comment="Excellent fit for the role.",
+            created_at=datetime.datetime.utcnow()
+        )
+        db.session.add_all([feedback1, feedback2])
         db.session.commit()
         print("Feedback created.")
 
@@ -144,6 +170,20 @@ def seed_data():
         db.session.add_all([faq1, faq2])
         db.session.commit()
         print("FAQs created.")
+
+        # Create JobViews
+        today = datetime.date.today()
+        yesterday = today - datetime.timedelta(days=1)
+        last_month = today.replace(day=1) - datetime.timedelta(days=1)
+
+        job_view1 = JobView(job_id=job_posting1.id, view_date=today, view_count=5)
+        job_view2 = JobView(job_id=job_posting1.id, view_date=yesterday, view_count=10)
+        job_view3 = JobView(job_id=job_posting2.id, view_date=today, view_count=3)
+        job_view4 = JobView(job_id=job_posting2.id, view_date=last_month, view_count=7)
+
+        db.session.add_all([job_view1, job_view2, job_view3, job_view4])
+        db.session.commit()
+        print("JobViews created.")
 
         print("Database seeding complete.")
 

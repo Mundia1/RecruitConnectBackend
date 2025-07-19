@@ -6,6 +6,7 @@ from app.metrics import metrics
 from app.utils.helpers import api_response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.user import User
+from app.services.job_view_service import JobViewService
 
 job_bp = Blueprint('job', __name__, url_prefix='/jobs')
 job_schema = JobSchema()
@@ -17,8 +18,8 @@ def create_job_posting():
     current_user_id = get_jwt_identity()
     current_user = db.session.get(User, current_user_id)
 
-    if not current_user or current_user.role != 'admin':
-        return api_response(403, "Forbidden: Admins only")
+    if not current_user or current_user.role not in ['admin', 'employer']:
+        return api_response(403, "Forbidden: Only Admins or Employers can create job postings")
 
     print("create_job_posting function entered") # Debug print
     data = request.get_json()
@@ -54,6 +55,7 @@ def get_job(job_id):
     job = JobService.get_job_by_id(job_id)
     if not job:
         return api_response(404, "Job not found")
+    JobViewService.record_view(job_id)
     return api_response(200, "Job found", job_schema.dump(job))
 
 @job_bp.route('/<int:job_id>', methods=['PATCH'])

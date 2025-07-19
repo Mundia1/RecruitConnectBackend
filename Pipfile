@@ -40,6 +40,7 @@ sentry-sdk = {extras = ["flask"], version = "*"}
 requests = "*"
 structlog = "*"
 tzdata = "*"
+flask-talisman = "*"
 
 [dev-packages]
 pytest = "*"
