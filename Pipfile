@@ -4,39 +4,53 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Flask-Migrate = "*"
-psycopg2-binary = "*"
+# Core
 python-dotenv = "*"
-Flask-Marshmallow = "*"
-marshmallow-sqlalchemy = "*"
-Werkzeug = "*"
-pytest = "*"
+
+# Flask
 flask = "*"
-flask-bcrypt = "*"
-flask-jwt-extended = "*"
 flask-sqlalchemy = "*"
+flask-migrate = "*"
+flask-jwt-extended = "*"
+flask-bcrypt = "*"
+flask-cors = "*"
+flask-limiter = "*"
+flask-caching = "*"
+flask-mail = "*"
+
+# Database
+psycopg2-binary = "*"
+sqlalchemy = "*"
+alembic = "*"
+
+# Serialization
 marshmallow = "*"
-Flask-Cors = "*"
-Flask-Limiter = "*"
-redis = "*"
-Flask-Caching = "*"
+marshmallow-sqlalchemy = "*"
+
+# Async & Workers
 celery = "*"
-Flask-Mail = "*"
+redis = "*"
+
+# Monitoring
 prometheus-flask-exporter = "*"
-structlog = "*"
-sentry-sdk = {extras = ["flask"], version = "*"}
-requests = "*"
 gunicorn = "*"
+sentry-sdk = {extras = ["flask"], version = "*"}
+
+# Utils
+requests = "*"
+structlog = "*"
+tzdata = "*"
 
 [dev-packages]
 pytest = "*"
-flask-testing = "*"
 pytest-cov = "*"
 pytest-timeout = "*"
 pytest-ordering = "*"
+flask-testing = "*"
 
 [requires]
 python_version = "3.8"
 
 [scripts]
 test = "pytest --cov=app --cov-report=term-missing"
+start = "gunicorn --config gunicorn_config.py wsgi:app"
