@@ -1,9 +1,11 @@
+--only-binary=:all:
 -i https://pypi.org/simple
-alembic==1.14.1; python_version >= '3.8'
-amqp==5.3.1; python_version >= '3.6'
-async-timeout==5.0.1; python_version >= '3.8'
+
+alembic==1.14.1
+amqp==5.3.1
+async-timeout==5.0.1
 backports.zoneinfo==0.2.1; python_version < '3.9' and sys_platform != 'win32'
-backports.zoneinfo; python_version < '3.9' and sys_platform == 'win32'
+tzdata; python_version < '3.9'
 bcrypt==4.3.0; python_version >= '3.8'
 billiard==4.2.1; python_version >= '3.7'
 blinker==1.8.2; python_version >= '3.8'
