@@ -14,6 +14,7 @@ from flask_bcrypt import Bcrypt
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+# Initialize CORS with minimal settings - will be configured in create_app
 cors = CORS()
 talisman = Talisman()
 cache = Cache()

@@ -41,16 +41,33 @@ def login():
 
     return api_response(200, "Login successful", {"access_token": access_token, "refresh_token": refresh_token, "user": user_schema.dump(user)})
 
-@auth_bp.route('/me', methods=['GET'])
-@jwt_required()
+@auth_bp.route('/me', methods=['GET', 'OPTIONS'])
+@jwt_required(optional=True)
 def me():
+    if request.method == 'OPTIONS':
+        return {'status': 'ok'}, 200
+        
     user_id = get_jwt_identity()
+    if not user_id:
+        return api_response(401, "Missing or invalid token")
+        
     user = db.session.get(User, user_id)
+    if not user:
+        return api_response(404, "User not found")
     return api_response(200, "User found", user_schema.dump(user))
 
-@auth_bp.route('/refresh', methods=['POST'])
-@jwt_required(refresh=True)
+@auth_bp.route('/refresh', methods=['POST', 'OPTIONS'])
+@jwt_required(refresh=True, optional=True)
 def refresh():
+    if request.method == 'OPTIONS':
+        return {'status': 'ok'}, 200
+        
     current_user = get_jwt_identity()
+    if not current_user:
+        return api_response(401, "Invalid or missing refresh token")
+        
     new_access_token = AuthService.refresh_access_token(current_user)
+    if not new_access_token:
+        return api_response(401, "Failed to refresh token")
+        
     return api_response(200, "Token refreshed", {'access_token': new_access_token})

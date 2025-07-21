@@ -1,9 +1,12 @@
 import os
 import structlog
 import sentry_sdk
-from flask import Flask, request, g
+from flask import Flask, request, g, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from sentry_sdk.integrations.flask import FlaskIntegration
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from config import config_by_name
 from app.utils.logging import configure_logging
@@ -11,9 +14,6 @@ from app.utils.error_handlers import register_error_handlers
 from app.blueprints.api_v1 import api_v1_bp
 from app.extensions import db, migrate, jwt, cors, talisman, cache, mail, celery
 from app.metrics import metrics, rate_limit_counter
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
 
 def create_app(config_name):
     configure_logging()
@@ -28,38 +28,89 @@ def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
 
+    # Initialize database and migrations
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    # Initialize JWT
     jwt.init_app(app)
-    cors.init_app(app)
+    
+    # Configure CORS with specific settings for development
+    cors.init_app(app, 
+                 resources={
+                     r"/*": {
+                         "origins": "http://localhost:5173",
+                         "supports_credentials": True,
+                         "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+                         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                         "expose_headers": ["Content-Range", "X-Total-Count"],
+                         "max_age": 600
+                     }
+                 },
+                 supports_credentials=True,
+                 automatic_options=True)
+    
+    # Add any additional headers that aren't CORS-related here
+    @app.after_request
+    def add_security_headers(response):
+        # Add security headers if needed
+        # response.headers['X-Content-Type-Options'] = 'nosniff'
+        # response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        # response.headers['X-XSS-Protection'] = '1; mode=block'
+        return response
 
     from app.models.user import User
 
     @app.before_request
     def load_logged_in_user():
-        g.current_user = None
+        g.user = None
+        g.current_user = None  # For backward compatibility
+        
+        # Skip for OPTIONS requests
+        if request.method == 'OPTIONS':
+            return
+            
         try:
-            verify_jwt_in_request(optional=True)
-            user_id = get_jwt_identity()
-            if user_id:
-                g.current_user = db.session.get(User, user_id)
-        except Exception:
-            # Log the exception if necessary, but don't block the request
-            pass
+            # Verify the JWT without raising an error if it's missing
+            try:
+                verify_jwt_in_request(optional=True)
+                user_id = get_jwt_identity()
+                
+                if user_id:
+                    user = db.session.get(User, user_id)
+                    if user:
+                        g.user = user
+                        g.current_user = user  # For backward compatibility
+                        current_app.logger.debug(f"Loaded user {user_id} into request context")
+                    else:
+                        current_app.logger.warning(f"User {user_id} not found in database")
+                else:
+                    current_app.logger.debug("No user ID in JWT")
+            except Exception as jwt_error:
+                # Log the JWT error but don't block the request
+                current_app.logger.debug(f"JWT verification failed: {str(jwt_error)}")
+                
+        except Exception as e:
+            # Log any other exceptions
+            current_app.logger.error(f"Error in load_logged_in_user: {str(e)}", exc_info=True)
 
     # Initialize metrics before rate limiter
     metrics.init_app(app)
     
     # Initialize rate limiter with metrics
+    def key_func():
+        # Skip rate limiting for OPTIONS requests
+        if request.method == 'OPTIONS':
+            return None  # Return None to skip rate limiting
+        return get_remote_address()
+    
     limiter = Limiter(
-        key_func=get_remote_address,
-        storage_uri='memory://' if app.config.get('TESTING') else app.config.get('RATELIMIT_STORAGE_URL'),
-        storage_options={"socket_connect_timeout": 30},
-        default_limits=["1000 per day", "500 per hour", "100 per minute"] if app.config.get('TESTING') 
-                      else ["200 per day", "50 per hour"],
-        on_breach=lambda limit: rate_limit_counter.labels(
-            endpoint=request.endpoint if request and hasattr(request, 'endpoint') else 'unknown'
-        ).inc() if not app.config.get('TESTING') else None
+        app=app,
+        key_func=key_func,  # Use our custom key function
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://",
+        strategy="fixed-window",
+        on_breach=lambda: rate_limit_counter.inc()
     )
     limiter.init_app(app)
     app.limiter = limiter
