@@ -9,7 +9,7 @@ python-dotenv = "*"
 
 # Flask
 flask = "*"
-flask-sqlalchemy = "*"
+flask-sqlalchemy = "~=3.0.3"
 flask-migrate = "*"
 flask-jwt-extended = "*"
 flask-bcrypt = "*"
@@ -20,7 +20,7 @@ flask-mail = "*"
 
 # Database
 psycopg2-binary = "*"
-sqlalchemy = "~=2.0.25"
+sqlalchemy = "~=2.0.23"
 alembic = "*"
 sqlalchemy-serializer = "*"
 
