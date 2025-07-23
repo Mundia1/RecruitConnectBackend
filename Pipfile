@@ -22,6 +22,7 @@ flask-mail = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
 alembic = "*"
+sqlalchemy-serializer = "*"
 
 # Serialization
 marshmallow = "*"
