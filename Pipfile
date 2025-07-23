@@ -40,7 +40,7 @@ sentry-sdk = {extras = ["flask"], version = "*"}
 # Utils
 requests = "*"
 structlog = "*"
-tzdata = "*"
+"backports.zoneinfo" = {extras = ["tzdata"], version = "*"}
 flask-talisman = "*"
 
 [dev-packages]
