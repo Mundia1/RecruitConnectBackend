@@ -117,9 +117,7 @@ def create_app(config_name):
     
     # Initialize other extensions
     cache.init_app(app)
-    mail.init_app(app)
-
-    
+    mail.init_app(app)  
 
     
 
@@ -130,6 +128,10 @@ def create_app(config_name):
 
 
     app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
+
+    @app.route('/')
+    def home():
+        return "Welcome to RecruitConnect API"
 
     register_error_handlers(app)
 
