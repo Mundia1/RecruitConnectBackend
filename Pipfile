@@ -40,7 +40,7 @@ sentry-sdk = {extras = ["flask"], version = "*"}
 # Utils
 requests = "*"
 structlog = "*"
-"backports.zoneinfo" = {version = "==0.2.1", extras = ["tzdata"]}
+"backports.zoneinfo" = {version = "==0.2.1", extras = ["tzdata"], markers = "python_version < '3.13'"}
 tzdata = ">=2024.1"
 flask-talisman = "*"
 
@@ -52,6 +52,7 @@ pytest-ordering = "*"
 flask-testing = "*"
 
 [requires]
+python_full_version = "3.12.5"
 python_version = "3.12"
 
 [scripts]
