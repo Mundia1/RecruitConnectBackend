@@ -40,7 +40,8 @@ sentry-sdk = {extras = ["flask"], version = "*"}
 # Utils
 requests = "*"
 structlog = "*"
-"backports.zoneinfo" = {extras = ["tzdata"], version = "*"}
+"backports.zoneinfo" = {version = "==0.2.1", extras = ["tzdata"]}
+tzdata = ">=2024.1"
 flask-talisman = "*"
 
 [dev-packages]
@@ -51,7 +52,7 @@ pytest-ordering = "*"
 flask-testing = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.12"
 
 [scripts]
 test = "pytest --cov=app --cov-report=term-missing"
