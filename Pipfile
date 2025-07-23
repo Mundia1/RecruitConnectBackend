@@ -20,7 +20,7 @@ flask-mail = "*"
 
 # Database
 psycopg2-binary = "*"
-sqlalchemy = "*"
+sqlalchemy = "~=2.0.25"
 alembic = "*"
 sqlalchemy-serializer = "*"
 
