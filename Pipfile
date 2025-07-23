@@ -9,7 +9,7 @@ python-dotenv = "*"
 
 # Flask
 flask = "*"
-flask-sqlalchemy = "*"
+flask-sqlalchemy = "~=3.0.3"
 flask-migrate = "*"
 flask-jwt-extended = "*"
 flask-bcrypt = "*"
@@ -20,7 +20,7 @@ flask-mail = "*"
 
 # Database
 psycopg2-binary = "*"
-sqlalchemy = "~=2.0.25"
+sqlalchemy = "~=2.0.23"
 alembic = "*"
 sqlalchemy-serializer = "*"
 
@@ -40,7 +40,8 @@ sentry-sdk = {extras = ["flask"], version = "*"}
 # Utils
 requests = "*"
 structlog = "*"
-tzdata = "*"
+"backports.zoneinfo" = {version = "==0.2.1", extras = ["tzdata"], markers = "python_version < '3.13'"}
+tzdata = ">=2024.1"
 flask-talisman = "*"
 
 [dev-packages]
@@ -51,7 +52,8 @@ pytest-ordering = "*"
 flask-testing = "*"
 
 [requires]
-python_version = "3.8"
+python_full_version = "3.12.5"
+python_version = "3.12"
 
 [scripts]
 test = "pytest --cov=app --cov-report=term-missing"
