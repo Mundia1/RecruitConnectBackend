@@ -5,16 +5,28 @@ name = "pypi"
 
 [packages]
 python-dotenv = "*"
+
+# Flask
+flask = "*"
+flask-sqlalchemy = "~=3.0.3"
+flask-migrate = "*"
 flask-jwt-extended = "*"
 flask-bcrypt = "*"
 flask-cors = "*"
 flask-limiter = "*"
 flask-caching = "*"
 flask-mail = "*"
-sqlalchemy = "*"
+
+# Database
+psycopg2-binary = "*"
+sqlalchemy = "~=2.0.23"
 alembic = "*"
+sqlalchemy-serializer = "*"
+
+# Serialization
 marshmallow = "*"
 marshmallow-sqlalchemy = "*"
+
 celery = "*"
 redis = "*"
 prometheus-flask-exporter = "*"
@@ -22,12 +34,9 @@ gunicorn = "*"
 sentry-sdk = {extras = ["flask"], version = "*"}
 requests = "*"
 structlog = "*"
-tzdata = "*"
+"backports.zoneinfo" = {version = "==0.2.1", extras = ["tzdata"], markers = "python_version < '3.13'"}
+tzdata = ">=2024.1"
 flask-talisman = "*"
-flask = "*"
-flask-sqlalchemy = "*"
-psycopg2-binary = "*"
-flask-migrate = "*"
 pytest = "*"
 pytest-cov = "*"
 
@@ -39,7 +48,8 @@ pytest-ordering = "*"
 flask-testing = "*"
 
 [requires]
-python_version = "3.8"
+python_full_version = "3.12.5"
+python_version = "3.12"
 
 [scripts]
 test = "pytest --cov=app --cov-report=term-missing"

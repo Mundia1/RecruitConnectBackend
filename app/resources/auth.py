@@ -1,73 +1,35 @@
-from flask import Blueprint, request
-from app.utils.decorators import rate_limit
-from app.schemas.user import UserRegisterSchema, UserLoginSchema, UserSchema
-from app.services.auth_service import AuthService
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask import Blueprint, request, jsonify
 from app.models.user import User
-from app.extensions import db
-from app.utils.helpers import api_response
+from app.extensions import db, jwt
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask_jwt_extended import create_access_token
+from sqlalchemy.exc import IntegrityError
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-user_schema = UserSchema()
-register_schema = UserRegisterSchema()
-login_schema = UserLoginSchema()
-
-@auth_bp.route('/register', methods=['POST'])
-@rate_limit("5 per minute")
-def register():
+@auth_bp.route('/signup', methods=['POST'])
+def signup():
     data = request.get_json()
-    errors = register_schema.validate(data)
-    if errors:
-        return api_response(400, "Invalid data", errors)
-
-    user, error = AuthService.register_user(data['email'], data['password'], data['first_name'], data['last_name'])
-    if error:
-        return api_response(400, error)
-
-    return api_response(201, "User registered successfully", user_schema.dump(user))
+    user = User(
+        email=data['email'],
+        first_name=data.get('first_name', ''),
+        last_name=data.get('last_name', ''),
+        role=data.get('role', 'job_seeker')
+    )
+    user.set_password(data['password'])
+    db.session.add(user)
+    try:
+        db.session.commit()
+        return jsonify({"message": "User created"}), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"message": "Email already exists"}), 400
 
 @auth_bp.route('/login', methods=['POST'])
-@rate_limit("5 per minute")
 def login():
     data = request.get_json()
-    errors = login_schema.validate(data)
-    if errors:
-        return api_response(400, "Invalid data", errors)
-
-    access_token, refresh_token, user = AuthService.login_user(data['email'], data['password'])
-    if not access_token:
-        return api_response(401, "Invalid credentials")
-
-    return api_response(200, "Login successful", {"access_token": access_token, "refresh_token": refresh_token, "user": user_schema.dump(user)})
-
-@auth_bp.route('/me', methods=['GET', 'OPTIONS'])
-@jwt_required(optional=True)
-def me():
-    if request.method == 'OPTIONS':
-        return {'status': 'ok'}, 200
-        
-    user_id = get_jwt_identity()
-    if not user_id:
-        return api_response(401, "Missing or invalid token")
-        
-    user = db.session.get(User, user_id)
-    if not user:
-        return api_response(404, "User not found")
-    return api_response(200, "User found", user_schema.dump(user))
-
-@auth_bp.route('/refresh', methods=['POST', 'OPTIONS'])
-@jwt_required(refresh=True, optional=True)
-def refresh():
-    if request.method == 'OPTIONS':
-        return {'status': 'ok'}, 200
-        
-    current_user = get_jwt_identity()
-    if not current_user:
-        return api_response(401, "Invalid or missing refresh token")
-        
-    new_access_token = AuthService.refresh_access_token(current_user)
-    if not new_access_token:
-        return api_response(401, "Failed to refresh token")
-        
-    return api_response(200, "Token refreshed", {'access_token': new_access_token})
+    user = User.query.filter_by(email=data['email']).first()
+    if user and user.check_password(data['password']):
+        access_token = create_access_token(identity=user.id)
+        return jsonify({"access_token": access_token, "user": user.email}), 200
+    return jsonify({"message": "Invalid credentials"}), 401

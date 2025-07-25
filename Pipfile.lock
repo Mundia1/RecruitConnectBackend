@@ -1,11 +1,12 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d070d1a503a5d884697b4bbff3779e08afa5461e256bd500047a63c7ff79a7d4"
+            "sha256": "e6b3d8b4c4f75658f6aa696e187e58ed49da710cfddeef6c5725ab922d319676"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.8"
+            "python_full_version": "3.12.5",
+            "python_version": "3.12"
         },
         "sources": [
             {
@@ -63,7 +64,7 @@
                 "sha256:f04e857b59d9d1ccc39ce2da1021d196e47234873820cbeaad210724b1ee28ac",
                 "sha256:fadbfe37f74051d024037f223b8e001611eac868b5c5b06144ef4d8b799862f2"
             ],
-            "markers": "python_version >= '3.6'",
+            "markers": "python_version < '3.13'",
             "version": "==0.2.1"
         },
         "bcrypt": {
@@ -462,12 +463,12 @@
         },
         "flask-sqlalchemy": {
             "hashes": [
-                "sha256:4ba4be7f419dc72f4efd8802d69974803c37259dd42f3913b0dcf75c9447e0a0",
-                "sha256:e4b68bb881802dda1a7d878b2fc84c06d1ee57fb40b874d3dc97dabfa36b8312"
+                "sha256:c5765e58ca145401b52106c0f46178569243c5da25556be2c231ecc60867c5b1",
+                "sha256:cabb6600ddd819a9f859f36515bb1bd8e7dbf30206cc679d2b081dff9e383283"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.8'",
-            "version": "==3.1.1"
+            "markers": "python_version >= '3.7'",
+            "version": "==3.0.5"
         },
         "flask-talisman": {
             "hashes": [
@@ -942,11 +943,11 @@
                 "flask"
             ],
             "hashes": [
-                "sha256:3ae544cf8841a519722872a63da1432ab007ef7ffb3dd43d15d1924cde9a07b4",
-                "sha256:a870f406d4c7041e7b47aaa6a1d21d005ba0f285dfdd39e7e7e5210c38f2955c"
+                "sha256:8d57a3b4861b243aa9d558fda75509ad487db14f488cbdb6c78c614979d77632",
+                "sha256:e85002234b7b8efac9b74c2d91dbd4f8f3970dc28da8798e39530e65cb740f94"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==2.33.1"
+            "version": "==2.33.2"
         },
         "six": {
             "hashes": [
@@ -1019,6 +1020,13 @@
             "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==2.0.41"
+        },
+        "sqlalchemy-serializer": {
+            "hashes": [
+                "sha256:5e1f83fc6d8a4f7618100c1b9a6af949498210756b974527ec3c8c1ec7e1300f"
+            ],
+            "index": "pypi",
+            "version": "==1.4.12"
         },
         "structlog": {
             "hashes": [
