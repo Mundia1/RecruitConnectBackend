@@ -1,14 +1,14 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Load .env variables
+load_dotenv()  
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SENTRY_DSN = os.getenv('SENTRY_DSN', '')  # Leave blank if not using Sentry
+    SENTRY_DSN = os.getenv('SENTRY_DSN', '')  
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -16,7 +16,9 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_TEST_URL', 'sqlite:///:memory:')
+
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL')
     CELERY_BROKER_URL = os.getenv('TEST_CELERY_BROKER_URL', 'redis://localhost:6379/1')
@@ -38,7 +40,5 @@ config_by_name = {
     'production': ProductionConfig
 }
 
-
-# Only include testing config if TEST_DATABASE_URL is set
 if os.getenv('TEST_DATABASE_URL'):
     config_by_name['testing'] = TestingConfig

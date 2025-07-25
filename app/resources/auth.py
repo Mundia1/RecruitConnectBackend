@@ -9,6 +9,17 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
+=======
+user_schema = UserSchema()
+register_schema = UserRegisterSchema()
+login_schema = UserLoginSchema()
+
+@auth_bp.route('/register', methods=['POST', 'OPTIONS'])
+@rate_limit("5 per minute")
+def register():
+    if request.method == 'OPTIONS':
+        return '', 200
+
     data = request.get_json()
     user = User(
         email=data['email'],
@@ -26,7 +37,13 @@ def signup():
         return jsonify({"message": "Email already exists"}), 400
 
 @auth_bp.route('/login', methods=['POST'])
+
+@auth_bp.route('/login', methods=['POST', 'OPTIONS'])
+@rate_limit("5 per minute")
+
 def login():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json()
     user = User.query.filter_by(email=data['email']).first()
     if user and user.check_password(data['password']):

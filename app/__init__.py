@@ -118,9 +118,11 @@ def create_app(config_name):
     def home():
         return "Welcome to RecruitConnect API"
 
-    # Import and register error handlers
-    #from .errors import register_error_handlers  # Make sure this exists in app/errors.py
-    #register_error_handlers(app)
+    @app.route('/')
+    def home():
+        return "Welcome to RecruitConnect API"
+
+    register_error_handlers(app)
 
     return app
 
