@@ -13,9 +13,11 @@ user_schema = UserSchema()
 register_schema = UserRegisterSchema()
 login_schema = UserLoginSchema()
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST', 'OPTIONS'])
 @rate_limit("5 per minute")
 def register():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json()
     errors = register_schema.validate(data)
     if errors:
@@ -27,9 +29,11 @@ def register():
 
     return api_response(201, "User registered successfully", user_schema.dump(user))
 
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST', 'OPTIONS'])
 @rate_limit("5 per minute")
 def login():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json()
     errors = login_schema.validate(data)
     if errors:
