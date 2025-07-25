@@ -36,8 +36,17 @@ def get_engine_url():
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+from app.extensions import db
+from app.models.user import User
+from app.models.job import JobPosting
+from app.models.application import Application
+# import Feedback, Message, etc. if you have them
+
 config.set_main_option('sqlalchemy.url', get_engine_url())
 target_db = current_app.extensions['migrate'].db
+
+# Add this line for Alembic autogenerate support:
+target_metadata = db.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
