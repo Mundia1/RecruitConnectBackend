@@ -1,22 +1,28 @@
 from flask import Flask, g, request, current_app
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-from .extensions import db, migrate, jwt, metrics, cache, mail
+from .extensions import db, migrate, jwt, metrics, cache, mail, celery
 from flask_cors import CORS
 from config import config_by_name
 from flask_limiter.util import get_remote_address
 from flask_limiter import Limiter
 import structlog
+import os
 
 # Initialize extensions
 cors = CORS()
 
 
+def register_resources(app):
+    from app.resources.application import application_bp
+    from app.blueprints.api_v1 import api_v1_bp
+    app.register_blueprint(application_bp, url_prefix='/api/v1/applications')
+    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
+
 
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])  # Load config
-
-    app.url_map.strict_slashes = False  # Disable strict slashes for all routes
+    app.url_map.strict_slashes = False  # Disable strict slashes
 
     # Initialize extensions
     db.init_app(app)
@@ -25,13 +31,16 @@ def create_app(config_name):
     cache.init_app(app)
     mail.init_app(app)
 
+    # Register resources (blueprints)
+    register_resources(app)
+
     # Configure CORS
+    frontend_urls = os.environ.get("FRONTEND_URLS", "http://localhost:5173,http://127.0.0.1:5173")
+    allowed_origins = [url.strip() for url in frontend_urls.split(',') if url.strip()]
+
     cors.init_app(app,
                   resources={r"/*": {
-                      "origins": [
-                          "http://localhost:5173",
-                          "http://127.0.0.1:5173"
-                      ],
+                      "origins": allowed_origins,
                       "supports_credentials": True,
                       "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
                       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -41,7 +50,7 @@ def create_app(config_name):
                   supports_credentials=True,
                   automatic_options=True)
 
-    # Security headers
+    # Security headers middleware
     @app.after_request
     def add_security_headers(response):
         return response
@@ -85,26 +94,18 @@ def create_app(config_name):
     app.limiter = limiter
 
     # Celery setup
-    from .extensions import celery
     celery.conf.update(app.config)
 
     log = structlog.get_logger()
 
-    # Register blueprints
-    from app.resources.application import application_bp
-    from app.blueprints.api_v1 import api_v1_bp
-    app.register_blueprint(application_bp, url_prefix='/api/v1/applications')
-    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
-
-    # ✅ Root route
+    # Root route
     @app.route('/')
     def index():
         return {"message": "Welcome to RecruitConnect API"}, 200
 
-    # ✅ Health check route
+    # Health check route
     @app.route('/health', methods=['GET'])
     def health():
         return {"status": "ok", "message": "RecruitConnect API running"}, 200
-    
 
     return app
