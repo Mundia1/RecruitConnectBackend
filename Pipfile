@@ -4,41 +4,34 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-python-dotenv = "*"
-
-# Flask
-flask = "*"
-flask-sqlalchemy = "~=3.0.3"
-flask-migrate = "*"
-flask-jwt-extended = "*"
 flask-bcrypt = "*"
 flask-cors = "*"
 flask-limiter = "*"
-flask-caching = "*"
-flask-mail = "*"
-
-# Database
-psycopg2-binary = "*"
 sqlalchemy = "~=2.0.23"
 alembic = "*"
 sqlalchemy-serializer = "*"
-
-# Serialization
 marshmallow = "*"
 marshmallow-sqlalchemy = "*"
-
-celery = "*"
 redis = "*"
 prometheus-flask-exporter = "*"
 gunicorn = "*"
 sentry-sdk = {extras = ["flask"], version = "*"}
-requests = "*"
 structlog = "*"
 "backports.zoneinfo" = {version = "==0.2.1", extras = ["tzdata"], markers = "python_version < '3.13'"}
 tzdata = ">=2024.1"
-flask-talisman = "*"
 pytest = "*"
 pytest-cov = "*"
+flask-jwt-extended = "*"
+flask-caching = "*"
+flask-talisman = "*"
+flask-mail = "*"
+celery = "*"
+requests = "*"
+python-dotenv = "*"
+flask = "*"
+flask-migrate = "*"
+flask-sqlalchemy = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 pytest = "*"
