@@ -35,11 +35,15 @@ def create_app(config_name):
     # Initialize JWT
     jwt.init_app(app)
     
-    # Configure CORS with specific settings for development
+    # Configure CORS with environment variables
+    # Default to localhost:5173 if FRONTEND_URLS is not set (for development)
+    frontend_urls = os.environ.get("FRONTEND_URLS", "http://localhost:5173")
+    allowed_origins = [url.strip() for url in frontend_urls.split(',') if url.strip()]
+    
     cors.init_app(app, 
                  resources={
                      r"/*": {
-                         "origins": "http://localhost:5173",
+                         "origins": allowed_origins,
                          "supports_credentials": True,
                          "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
                          "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
