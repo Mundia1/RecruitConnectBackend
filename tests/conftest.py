@@ -12,23 +12,12 @@ from tests.factories import create_user, create_job_posting
 
 os.environ['SENTRY_DSN'] = 'http://public@example.com/1'
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def app():
-    # Create app with testing config
     app = create_app('testing')
-    
-    # Enable rate limiting with higher limits for testing
-    app.config['RATELIMIT_ENABLED'] = True
-    
-    # Create all tables
     with app.app_context():
         db.create_all()
-    
-    yield app
-    
-    # Cleanup
-    with app.app_context():
-        db.session.remove()
+        yield app
         db.drop_all()
 
 @pytest.fixture(scope='function')
@@ -49,35 +38,10 @@ def cleanup_after_test(app):
 @pytest.fixture(scope='function')
 def init_database(app):
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-
-        from tests.factories import create_user, create_job_posting
-
-        # Create test users
-        user1 = create_user("test1@example.com", "password", "Test", "User1", "job_seeker")
-        user2 = create_user("test2@example.com", "password", "Test", "User2", "job_seeker")
-        recruiter = create_user("recruiter@example.com", "password", "Test", "Recruiter", "admin")
-
-        # Create test job postings
-        job_posting1 = create_job_posting(
-            title="Test Job 1",
-            description="Description for test job 1",
-            location="Test Location 1",
-            requirements="Test Requirements 1",
-            admin_id=recruiter.id
-        )
-        job_posting2 = create_job_posting(
-            title="Test Job 2",
-            description="Description for test job 2",
-            location="Test Location 2",
-            requirements="Test Requirements 2",
-            admin_id=recruiter.id
-        )
-
+        db.session.begin(subtransactions=True)
         yield db
-        db.session.remove()
-        db.engine.dispose()
+        db.session.rollback()
+        db.session.close()
 
 @pytest.fixture(scope='function')
 def employer(app):
