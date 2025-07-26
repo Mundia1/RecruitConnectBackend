@@ -56,3 +56,4 @@ htmlcov/
 *~
 .ipynb_checkpoints
 
+.env

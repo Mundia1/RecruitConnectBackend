@@ -17,11 +17,10 @@ def test_create_application_missing_fields(client, app):
 def test_create_duplicate_application(client, app, employer, job_posting):
     """Test creating a duplicate application"""
     with app.app_context():
-        # Ensure objects are in the current session
+
         db.session.merge(employer)
         job_posting = db.session.merge(job_posting)
         
-        # Create a test user
         from tests.factories import create_user
         user = create_user(
             email='testuser@example.com',
