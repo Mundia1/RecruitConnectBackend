@@ -1,33 +1,35 @@
 from flask import Flask, g, request, current_app
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request  # Add this import
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from .extensions import db, migrate, jwt, metrics, cache, mail
-from flask_cors import CORS  # Add this import
+from flask_cors import CORS
 from .resources import register_resources
-from config import config_by_name  # Import the dictionary
-from flask_limiter.util import get_remote_address  # Import get_remote_address
-from flask_limiter import Limiter  # Import Limiter
-import structlog  # Import structlog for logging
+from config import config_by_name
+from flask_limiter.util import get_remote_address
+from flask_limiter import Limiter
+import structlog
+import os  # Make sure to import os for environment variables
 
 cors = CORS()  # Initialize the CORS object
 
 def create_app(config_name):
     app = Flask(__name__)
-    app.config.from_object(config_by_name[config_name])  # Pass the class, not a string
+    app.config.from_object(config_by_name[config_name])
     db.init_app(app)
     migrate.init_app(app, db)
-    register_resources(app)  # <-- This registers all blueprints
+    register_resources(app)
     
     # Initialize JWT
     jwt.init_app(app)
     
-    # Configure CORS with specific settings for development
+    # Configure CORS with environment variables
+    # Default to localhost:5173 if FRONTEND_URLS is not set (for development)
+    frontend_urls = os.environ.get("FRONTEND_URLS", "http://localhost:5173,http://127.0.0.1:5173")
+    allowed_origins = [url.strip() for url in frontend_urls.split(',') if url.strip()]
+    
     cors.init_app(app, 
                  resources={
                      r"/*": {
-                         "origins": [
-                             "http://localhost:5173",
-                             "http://127.0.0.1:5173"
-                         ],
+                         "origins": allowed_origins,
                          "supports_credentials": True,
                          "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
                          "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -38,7 +40,7 @@ def create_app(config_name):
                  supports_credentials=True,
                  automatic_options=True)
     
-    # Add any additional headers that aren't CORS-related here
+    # Security headers middleware
     @app.after_request
     def add_security_headers(response):
         # Add security headers if needed
@@ -103,20 +105,11 @@ def create_app(config_name):
     cache.init_app(app)
     mail.init_app(app)  
 
-    
-
     # Initialize Celery
-    from .extensions import celery  # Make sure celery is imported from your extensions module
+    from .extensions import celery
     celery.conf.update(app.config)
 
     log = structlog.get_logger()
-
-    # Import the API blueprint
-    from app.blueprints.api_v1 import api_v1_bp
-
-    @app.route('/')
-    def home():
-        return "Welcome to RecruitConnect API"
 
     @app.route('/')
     def home():
@@ -131,4 +124,4 @@ from app.blueprints.api_v1 import api_v1_bp
 
 def register_resources(app):
     app.register_blueprint(application_bp, url_prefix='/api/v1/applications')
-    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')  # <-- Keep only here
+    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
