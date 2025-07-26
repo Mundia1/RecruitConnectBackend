@@ -1,43 +1,29 @@
-import os
-import structlog
-import sentry_sdk
-from flask import Flask, request, g, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
-from sentry_sdk.integrations.flask import FlaskIntegration
+from flask import Flask, g, request, current_app
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from .extensions import db, migrate, jwt, metrics, cache, mail
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
+from .resources import register_resources
 from config import config_by_name
-from app.utils.logging import configure_logging
-from app.utils.error_handlers import register_error_handlers
-from app.blueprints.api_v1 import api_v1_bp
-from app.extensions import db, migrate, jwt, cors, talisman, cache, mail, celery
-from app.metrics import metrics, rate_limit_counter
+from flask_limiter.util import get_remote_address
+from flask_limiter import Limiter
+import structlog
+import os  # Make sure to import os for environment variables
+
+cors = CORS()  # Initialize the CORS object
 
 def create_app(config_name):
-    configure_logging()
-    
-    sentry_dsn = config_by_name[config_name].SENTRY_DSN
-    sentry_sdk.init(
-        dsn=sentry_dsn,
-        integrations=[FlaskIntegration()],
-        traces_sample_rate=1.0
-    )
-
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
-
-    # Initialize database and migrations
     db.init_app(app)
     migrate.init_app(app, db)
+    register_resources(app)
     
     # Initialize JWT
     jwt.init_app(app)
     
     # Configure CORS with environment variables
     # Default to localhost:5173 if FRONTEND_URLS is not set (for development)
-    frontend_urls = os.environ.get("FRONTEND_URLS", "http://localhost:5173")
+    frontend_urls = os.environ.get("FRONTEND_URLS", "http://localhost:5173,http://127.0.0.1:5173")
     allowed_origins = [url.strip() for url in frontend_urls.split(',') if url.strip()]
     
     cors.init_app(app, 
@@ -54,7 +40,7 @@ def create_app(config_name):
                  supports_credentials=True,
                  automatic_options=True)
     
-    # Add any additional headers that aren't CORS-related here
+    # Security headers middleware
     @app.after_request
     def add_security_headers(response):
         # Add security headers if needed
@@ -98,9 +84,6 @@ def create_app(config_name):
             # Log any other exceptions
             current_app.logger.error(f"Error in load_logged_in_user: {str(e)}", exc_info=True)
 
-    # Initialize metrics before rate limiter
-    metrics.init_app(app)
-    
     # Initialize rate limiter with metrics
     def key_func():
         # Skip rate limiting for OPTIONS requests
@@ -113,8 +96,7 @@ def create_app(config_name):
         key_func=key_func,  # Use our custom key function
         default_limits=["200 per day", "50 per hour"],
         storage_uri="memory://",
-        strategy="fixed-window",
-        on_breach=lambda: rate_limit_counter.inc()
+        strategy="fixed-window"
     )
     limiter.init_app(app)
     app.limiter = limiter
@@ -123,15 +105,11 @@ def create_app(config_name):
     cache.init_app(app)
     mail.init_app(app)  
 
-    
-
+    # Initialize Celery
+    from .extensions import celery
     celery.conf.update(app.config)
 
     log = structlog.get_logger()
-    app.logger.addHandler(log)
-
-
-    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
 
     @app.route('/')
     def home():
@@ -140,3 +118,10 @@ def create_app(config_name):
     register_error_handlers(app)
 
     return app
+
+from app.resources.application import application_bp
+from app.blueprints.api_v1 import api_v1_bp
+
+def register_resources(app):
+    app.register_blueprint(application_bp, url_prefix='/api/v1/applications')
+    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
