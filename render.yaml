@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: recruitconnect-backend
+    env: python
+    buildCommand: pip install pipenv && pipenv install --deploy --system
+    startCommand: gunicorn --worker-tmp-dir /dev/shm --config gunicorn_config.py wsgi:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.5
+      - key: PYTHONUNBUFFERED
+        value: true
+    plan: free
