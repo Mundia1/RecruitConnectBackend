@@ -7,10 +7,10 @@ from flask_limiter.util import get_remote_address
 from flask_limiter import Limiter
 import structlog
 import os
+from datetime import timedelta
 
 # Initialize extensions
 cors = CORS()
-
 
 def register_resources(app):
     from app.resources.application import application_bp
@@ -31,29 +31,39 @@ def create_app(config_name):
     cache.init_app(app)
     mail.init_app(app)
 
-    # Register resources (blueprints)
-    register_resources(app)
-
     # Configure CORS
     frontend_urls = os.environ.get("FRONTEND_URLS", "http://localhost:5173,http://127.0.0.1:5173")
     allowed_origins = [url.strip() for url in frontend_urls.split(',') if url.strip()]
 
     cors.init_app(app,
-                  resources={r"/*": {
-                      "origins": allowed_origins,
-                      "supports_credentials": True,
-                      "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-                      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                      "expose_headers": ["Content-Range", "X-Total-Count"],
-                      "max_age": 600
-                  }},
-                  supports_credentials=True,
-                  automatic_options=True)
+        resources={"/*": {
+            "origins": allowed_origins,
+            "supports_credentials": True,
+            "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            "expose_headers": ["Content-Range", "X-Total-Count"],
+            "max_age": 600
+        }},
+        supports_credentials=True,
+        automatic_options=True)
 
-    # Security headers middleware
-    @app.after_request
-    def add_security_headers(response):
-        return response
+    # Register resources (blueprints)
+    register_resources(app)
+
+    # Set JWT access token expiration
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
+
+    # Configure JWT callbacks
+    @jwt.user_identity_loader
+    def user_identity_lookup(user):
+        return user.id
+
+    @jwt.user_lookup_loader
+    def user_lookup_callback(_jwt_header, jwt_data):
+        from .models.user import User
+        identity = jwt_data["sub"]
+        return User.query.filter_by(id=identity).one_or_none()
 
     # Load logged-in user from JWT if present
     from app.models.user import User
@@ -96,6 +106,7 @@ def create_app(config_name):
     # Celery setup
     celery.conf.update(app.config)
 
+    # Initialize logging
     log = structlog.get_logger()
 
     # Root route

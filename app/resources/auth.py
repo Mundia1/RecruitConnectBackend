@@ -13,15 +13,16 @@ def register():
     if request.method == 'OPTIONS':
         return '', 200
 
-    data = request.get_json()
     if not data or 'email' not in data or 'password' not in data:
         return jsonify({"message": "Email and password are required"}), 400
+
+    role = data.get("role", "job_seeker")  # Default to job_seeker
 
     user = User(
         email=data['email'],
         first_name=data.get('first_name', ''),
         last_name=data.get('last_name', ''),
-        role=data.get('role', 'job_seeker')  # Default role is job_seeker
+        role=role
     )
     user.set_password(data['password'])
 
@@ -32,6 +33,7 @@ def register():
     except IntegrityError:
         db.session.rollback()
         return jsonify({"message": "Email already exists"}), 400
+    return jsonify({"message": "User registered successfully"}), 201
 
 
 @auth_bp.route('/login', methods=['POST', 'OPTIONS'])
@@ -46,9 +48,7 @@ def login():
     user = User.query.filter_by(email=data['email']).first()
 
     if user and user.check_password(data['password']):
-        # ✅ FIX: JWT identity must be string
         access_token = create_access_token(identity=str(user.id))
-
         return jsonify({
             "access_token": access_token,
             "user": {
@@ -56,8 +56,8 @@ def login():
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "role": user.role
+                "role": user.role,
+                "profile_picture": getattr(user, "profile_picture", None)
             }
         }), 200
-
     return jsonify({"message": "Invalid credentials"}), 401
