@@ -7,6 +7,7 @@ from config import config_by_name  # Import the dictionary
 from flask_limiter.util import get_remote_address  # Import get_remote_address
 from flask_limiter import Limiter  # Import Limiter
 import structlog  # Import structlog for logging
+from datetime import timedelta
 
 cors = CORS()  # Initialize the CORS object
 
@@ -21,22 +22,22 @@ def create_app(config_name):
     jwt.init_app(app)
     
     # Configure CORS with specific settings for development
-    cors.init_app(app, 
-                 resources={
-                     r"/*": {
-                         "origins": [
-                             "http://localhost:5173",
-                             "http://127.0.0.1:5173"
-                         ],
-                         "supports_credentials": True,
-                         "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-                         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                         "expose_headers": ["Content-Range", "X-Total-Count"],
-                         "max_age": 600
-                     }
-                 },
-                 supports_credentials=True,
-                 automatic_options=True)
+    cors.init_app(app,
+        resources={
+            r"/api/*": {
+                "origins": [
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173"
+                ],
+                "supports_credentials": True,
+                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                "expose_headers": ["Content-Range", "X-Total-Count"],
+                "max_age": 600
+            }
+        },
+        supports_credentials=True,
+        automatic_options=True)
     
     # Add any additional headers that aren't CORS-related here
     @app.after_request
@@ -103,7 +104,8 @@ def create_app(config_name):
     cache.init_app(app)
     mail.init_app(app)  
 
-    
+    # Set JWT access token expiration
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)  # Example: 2 hours
 
     # Initialize Celery
     from .extensions import celery  # Make sure celery is imported from your extensions module
