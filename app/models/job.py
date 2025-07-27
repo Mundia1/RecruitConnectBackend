@@ -10,7 +10,10 @@ class JobPosting(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    location = db.Column(db.String(255))
+    company = db.Column(db.String(255), nullable=False)
+    location = db.Column(db.String(255), nullable=False)
+    salary = db.Column(db.Integer, nullable=True)  # Storing salary as cents to avoid floating point issues
+    job_type = db.Column(db.String(50), nullable=False, default='Full-time')  # Full-time, Part-time, Contract, etc.
     requirements = db.Column(db.Text)
     deadline = db.Column(db.DateTime)
     posted_at = db.Column(db.DateTime, default=datetime.utcnow)
