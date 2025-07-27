@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-# Core
 python-dotenv = "*"
 
 # Flask
@@ -28,21 +27,18 @@ sqlalchemy-serializer = "*"
 marshmallow = "*"
 marshmallow-sqlalchemy = "*"
 
-# Async & Workers
 celery = "*"
 redis = "*"
-
-# Monitoring
 prometheus-flask-exporter = "*"
 gunicorn = "*"
 sentry-sdk = {extras = ["flask"], version = "*"}
-
-# Utils
 requests = "*"
 structlog = "*"
 "backports.zoneinfo" = {version = "==0.2.1", extras = ["tzdata"], markers = "python_version < '3.13'"}
 tzdata = ">=2024.1"
 flask-talisman = "*"
+pytest = "*"
+pytest-cov = "*"
 
 [dev-packages]
 pytest = "*"

@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from app.schemas.job import JobSchema
 from app.services.job_service import JobService
 from app.extensions import db, cache
@@ -7,6 +7,7 @@ from app.utils.helpers import api_response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.user import User
 from app.services.job_view_service import JobViewService
+from app.models.job import JobPosting
 
 job_bp = Blueprint('job', __name__, url_prefix='/jobs')
 job_schema = JobSchema()
@@ -47,8 +48,8 @@ def create_job_posting():
 @job_bp.route('/', methods=['GET'])
 @cache.cached(timeout=60)
 def get_jobs():
-    jobs = JobService.get_all_jobs()
-    return api_response(200, "Jobs retrieved", jobs_schema.dump(jobs))
+    jobs = JobPosting.query.all()
+    return jsonify(jobs_schema.dump(jobs))
 
 @job_bp.route('/<int:job_id>', methods=['GET'])
 def get_job(job_id):

@@ -1,3 +1,9 @@
+
+
+
+
+
+
 # RecruitConnect Database Schema
 
 This document provides a detailed outline of the database schema for the RecruitConnect application. It is designed to serve as a comprehensive reference for developers, detailing table structures, column definitions, and their relationships.
