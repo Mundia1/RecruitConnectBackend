@@ -33,7 +33,10 @@ def login():
     print("Login attempt:", data['email'])
     if user:
         print("User found:", user.email, "Role:", user.role)
+        print("Password hash:", user.password_hash)
         print("Password correct?", user.check_password(data['password']))
+    else:
+        print("No user found for email:", data['email'])
     if user and user.check_password(data['password']):
         access_token = create_access_token(identity=user.id)
         return jsonify({"access_token": access_token, "user": {

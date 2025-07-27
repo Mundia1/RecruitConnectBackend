@@ -84,18 +84,10 @@ def create_app(config_name):
             current_app.logger.error(f"Error in load_logged_in_user: {str(e)}", exc_info=True)
 
     # Initialize rate limiter with metrics
-    def key_func():
-        # Skip rate limiting for OPTIONS requests
-        if request.method == 'OPTIONS':
-            return None  # Return None to skip rate limiting
-        return get_remote_address()
-    
     limiter = Limiter(
+        get_remote_address,
         app=app,
-        key_func=key_func,  # Use our custom key function
-        default_limits=["200 per day", "50 per hour"],
-        storage_uri="memory://",
-        strategy="fixed-window"
+        default_limits=["100 per minute"],  # Increase this value for dev
     )
     limiter.init_app(app)
     app.limiter = limiter
@@ -126,9 +118,7 @@ def create_app(config_name):
 
     return app
 
-from app.resources.application import application_bp
 from app.blueprints.api_v1 import api_v1_bp
 
 def register_resources(app):
-    app.register_blueprint(application_bp, url_prefix='/api/v1/applications')
-    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')  # <-- Keep only here
+    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
