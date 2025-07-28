@@ -1,38 +1,38 @@
 import logging
+import os # Import the os module
 from flask import Flask, g, request, current_app
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request  # Add this import
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from .extensions import db, migrate, jwt, metrics, cache, mail
-from flask_cors import CORS  # Add this import
+from flask_cors import CORS
 from .resources import register_resources
-from config import config_by_name  # Import the dictionary
-from flask_limiter.util import get_remote_address  # Import get_remote_address
-from flask_limiter import Limiter  # Import Limiter
-import structlog  # Import structlog for logging
+from config import config_by_name
+from flask_limiter.util import get_remote_address
+from flask_limiter import Limiter
+import structlog
 from datetime import timedelta
 
-cors = CORS()  # Initialize the CORS object
+cors = CORS()
 
 def create_app(config_name):
     app = Flask(__name__)
     app.logger.setLevel(logging.INFO)
-    app.config.from_object(config_by_name[config_name])  # Pass the class, not a string
+    app.config.from_object(config_by_name[config_name])
     db.init_app(app)
     migrate.init_app(app, db)
-    register_resources(app)  # <-- This registers all blueprints
-    
-    # Initialize JWT
+    register_resources(app)
+
     jwt.init_app(app)
-    
-    # Configure CORS with specific settings for development
-    CORS_ORIGINS = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ]
-    
+
+    # Get CORS allowed origins from environment variable
+    # Expects a comma-separated string, e.g., "http://localhost:5173,https://your-frontend.com"
+    cors_origins_str = os.environ.get('CORS_ORIGINS', '')
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
+
     cors.init_app(app,
         resources={
             r"/api/*": {
-                "origins": CORS_ORIGINS,
+                # Use a function to dynamically set the origin
+                "origins": lambda origin, _: origin in CORS_ALLOWED_ORIGINS,
                 "supports_credentials": True,
                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
                 "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
@@ -42,27 +42,9 @@ def create_app(config_name):
         },
         supports_credentials=True,
         automatic_options=True)
-    
-    # Ensure OPTIONS requests are handled for CORS
-    @app.before_request
-    def handle_options():
-        if request.method == 'OPTIONS':
-            response = current_app.make_default_options_response()
-            # Add CORS headers
-            response.headers['Access-Control-Allow-Origin'] = ', '.join(CORS_ORIGINS)
-            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD'
-            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-            response.headers['Access-Control-Allow-Credentials'] = 'true'
-            response.headers['Access-Control-Max-Age'] = '600'
-            return response
-    
-    # Add any additional headers that aren't CORS-related here
+
     @app.after_request
     def add_security_headers(response):
-        # Add security headers if needed
-        # response.headers['X-Content-Type-Options'] = 'nosniff'
-        # response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        # response.headers['X-XSS-Protection'] = '1; mode=block'
         return response
 
     from app.models.user import User
@@ -70,59 +52,50 @@ def create_app(config_name):
     @app.before_request
     def load_logged_in_user():
         g.user = None
-        g.current_user = None  # For backward compatibility
-        
-        # Skip for OPTIONS requests
+        g.current_user = None
+
         if request.method == 'OPTIONS':
             return
-            
+
         try:
-            # Verify the JWT without raising an error if it's missing
             try:
                 verify_jwt_in_request(optional=True)
                 user_id = get_jwt_identity()
-                
+
                 if user_id:
                     user = db.session.get(User, user_id)
                     if user:
                         g.user = user
-                        g.current_user = user  # For backward compatibility
+                        g.current_user = user
                         current_app.logger.debug(f"Loaded user {user_id} into request context")
                     else:
                         current_app.logger.warning(f"User {user_id} not found in database")
                 else:
                     current_app.logger.debug("No user ID in JWT")
             except Exception as jwt_error:
-                # Log the JWT error but don't block the request
                 current_app.logger.debug(f"JWT verification failed: {str(jwt_error)}")
-                
+
         except Exception as e:
-            # Log any other exceptions
             current_app.logger.error(f"Error in load_logged_in_user: {str(e)}", exc_info=True)
 
-    # Initialize rate limiter with metrics
     limiter = Limiter(
         get_remote_address,
         app=app,
-        default_limits=["100 per minute"],  # Increase this value for dev
+        default_limits=["100 per minute"],
     )
     limiter.init_app(app)
     app.limiter = limiter
-    
-    # Initialize other extensions
+
     cache.init_app(app)
-    mail.init_app(app)  
+    mail.init_app(app)
 
-    # Set JWT access token expiration
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)  # Example: 2 hours
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)
 
-    # Initialize Celery
-    from .extensions import celery  # Make sure celery is imported from your extensions module
+    from .extensions import celery
     celery.conf.update(app.config)
 
     log = structlog.get_logger()
 
-    # Import the API blueprint
     from app.blueprints.api_v1 import api_v1_bp
 
     @app.route('/')
@@ -132,10 +105,6 @@ def create_app(config_name):
     @app.route('/favicon.ico')
     def favicon():
         return '', 204
-
-    # Import and register error handlers
-    #from .errors import register_error_handlers  # Make sure this exists in app/errors.py
-    #register_error_handlers(app)
 
     return app
 
