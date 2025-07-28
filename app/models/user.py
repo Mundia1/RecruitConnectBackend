@@ -1,8 +1,8 @@
 from datetime import datetime
 from app.extensions import db
-from app.extensions import bcrypt
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.dialects import postgresql
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
@@ -11,7 +11,7 @@ class User(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False) # Increased length to 255
+    password_hash = db.Column(db.String(128), nullable=False) # Changed length to 128
     role = db.Column(postgresql.ENUM('job_seeker', 'employer', 'admin', name='user_role_enum'), default='job_seeker')
     first_name = db.Column(db.String(100))
     last_name = db.Column(db.String(100))
@@ -20,7 +20,14 @@ class User(db.Model, SerializerMixin):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def set_password(self, password):
-        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return bcrypt.check_password_hash(self.password_hash, password)
+        return check_password_hash(self.password_hash, password)
+
+    @classmethod
+    def authenticate(cls, email, password):
+        user = cls.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            return user
+        return None
