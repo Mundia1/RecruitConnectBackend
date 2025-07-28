@@ -1,38 +1,46 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
+from app.extensions import db
+from app.models import Application
 from app.schemas.application import ApplicationSchema
 from app.services.application_service import ApplicationService
 from app.utils.helpers import api_response
 from werkzeug.exceptions import NotFound
 from app.models.user import User
 from app.models.job import JobPosting
-from app.extensions import db
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 application_bp = Blueprint('application', __name__, url_prefix='/applications')
 application_schema = ApplicationSchema()
 applications_schema = ApplicationSchema(many=True)
 
 @application_bp.route('/', methods=['POST'])
-def create_application():
+@jwt_required()
+def apply_for_job():
     data = request.get_json()
-    errors = application_schema.validate(data)
-    if errors:
-        return api_response(400, "Invalid data", errors)
+    user_id = data.get('user_id')
+    job_posting_id = data.get('job_posting_id')
+    if not user_id or not job_posting_id:
+        return jsonify({"error": "Missing user_id or job_posting_id"}), 400
 
-    user = db.session.get(User, data['user_id'])
-    job_posting = db.session.get(JobPosting, data['job_posting_id'])
+    # Ensure the user making the request matches the JWT identity
+    current_user_id = get_jwt_identity()
+    if int(user_id) != int(current_user_id):
+        return jsonify({"error": "You can only apply as yourself."}), 403
 
-    if not user:
-        return api_response(400, "Invalid data", {'user_id': ['User not found']})
-    if not job_posting:
-        return api_response(400, "Invalid data", {'job_posting_id': ['Job posting not found']})
+    # Check user role
+    user = User.query.get(user_id)
+    if not user or user.role.lower() != "job_seeker":
+        return jsonify({"error": "Only job seekers can apply for jobs."}), 403
 
-    try:
-        application = ApplicationService.create_application(data['user_id'], data['job_posting_id'])
-        if application is None:
-            return api_response(400, "Invalid data", {'user_id': ['Application already exists for this user and job']})
-        return api_response(201, "Application created successfully", application_schema.dump(application))
-    except ValueError as e:
-        return api_response(400, str(e))
+    # Prevent duplicate applications
+    existing = Application.query.filter_by(user_id=user_id, job_posting_id=job_posting_id).first()
+    if existing:
+        return jsonify({"error": "Application already exists"}), 400
+
+    application = Application(user_id=user_id, job_posting_id=job_posting_id)
+    db.session.add(application)
+    db.session.commit()
+    return jsonify({"message": "Application created"}), 201
 
 @application_bp.route('/<int:application_id>', methods=['GET'])
 def get_application(application_id):
@@ -65,11 +73,22 @@ def delete_application(application_id):
 @application_bp.route('/', methods=['GET'])
 def list_applications():
     user_id = request.args.get('user_id', type=int)
-    job_posting_id = request.args.get('job_posting_id', type=int)
     if user_id:
         applications = ApplicationService.get_applications_for_user(user_id)
-    elif job_posting_id:
-        applications = ApplicationService.get_applications_for_job(job_posting_id)
     else:
         applications = ApplicationService.get_all_applications()
-    return api_response(200, "Applications retrieved", applications_schema.dump(applications))
+    result = []
+    for app in applications:
+        job = app.job_posting  # SQLAlchemy relationship
+        result.append({
+            "id": app.id,
+            "title": job.title if job else "",
+            "company": f"{job.admin.first_name} {job.admin.last_name}" if job and job.admin else "",
+            "applied_at": app.applied_at.strftime("%Y-%m-%d %H:%M:%S") if app.applied_at else "",
+            "status": app.status,
+            "description": job.description if job else "",
+            "requirements": job.requirements if job else "",
+            "location": job.location if job else "",
+            "job_posting_id": app.job_posting_id,
+        })
+    return jsonify(result), 200
