@@ -23,26 +23,38 @@ def register():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+    if not request.is_json:
+        return jsonify({"message": "Missing JSON in request"}), 400
+        
+    try:
+        data = request.get_json()
+        if not data or not isinstance(data, dict):
+            return jsonify({"message": "Invalid request data"}), 400
+            
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({"message": "Missing email or password"}), 400
 
-    access_token, refresh_token, user = AuthService.login_user(email, password)
+        access_token, refresh_token, user = AuthService.login_user(email, password)
 
-    if access_token and refresh_token and user:
-        return jsonify({
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "user": {
-                "id": user.id,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-                "role": user.role,
-                "profile_picture": getattr(user, "profile_picture", None)
-            }
-        }), 200
-    return jsonify({"message": "Invalid credentials"}), 401
+        if access_token and refresh_token and user:
+            return jsonify({
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "user": {
+                    "id": user.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                    "role": user.role,
+                    "profile_picture": getattr(user, "profile_picture", None)
+                }
+            }), 200
+        return jsonify({"message": "Invalid credentials"}), 401
+    except Exception as e:
+        return jsonify({"message": f"An error occurred: {str(e)}"}), 500
 
 @auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
