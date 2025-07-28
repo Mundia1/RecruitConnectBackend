@@ -1,7 +1,8 @@
 import multiprocessing
+import os
 
-# Server socket
-bind = '0.0.0.0:' + str(int(5000))
+# Server socket - Use port from environment variable or default to 10000
+bind = '0.0.0.0:' + str(int(os.environ.get('PORT', 10000)))
 
 # Worker processes
 workers = multiprocessing.cpu_count() * 2 + 1

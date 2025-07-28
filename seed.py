@@ -64,48 +64,194 @@ def seed_data():
         print("Users created.")
 
         # Create JobPostings
-        job_posting1 = JobPosting(
-            title="Software Engineer",
-            description="Develop and maintain software applications.",
-            location="New York, NY",
-            requirements="BS in CS, 3+ years experience",
-            deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
-            posted_at=datetime.datetime.utcnow(),
-            admin_id=admin_user.id
-        )
-        job_posting2 = JobPosting(
-            title="Data Scientist",
-            description="Analyze complex data sets and build predictive models.",
-            location="San Francisco, CA",
-            requirements="MS in Data Science, 5+ years experience",
-            deadline=datetime.datetime.utcnow() + datetime.timedelta(days=45),
-            posted_at=datetime.datetime.utcnow(),
-            admin_id=employer_user.id # Linked to employer
-        )
-        db.session.add_all([job_posting1, job_posting2])
+        job_postings = [
+            # Kenya Jobs
+            JobPosting(
+                title="Frontend Developer",
+                description="Build responsive UI with React.js and TailwindCSS",
+                company="Safaricom PLC",
+                location="Nairobi, Kenya",
+                salary=120000,
+                job_type="Full-time",
+                requirements="2+ years experience with React.js and modern frontend development",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=admin_user.id
+            ),
+            JobPosting(
+                title="Backend Developer",
+                description="Develop scalable APIs using Flask and PostgreSQL",
+                company="Equity Bank",
+                location="Nairobi, Kenya",
+                salary=150000,
+                job_type="Full-time",
+                requirements="3+ years experience with Python, Flask, and database design",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=employer_user.id
+            ),
+            JobPosting(
+                title="Mobile App Developer",
+                description="Develop Android and iOS apps using Flutter",
+                company="Twiga Foods",
+                location="Nairobi, Kenya",
+                salary=135000,
+                job_type="Full-time",
+                requirements="2+ years experience with Flutter and mobile development",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=45),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=admin_user.id
+            ),
+            JobPosting(
+                title="DevOps Engineer",
+                description="Maintain CI/CD pipelines and cloud infrastructure",
+                company="Andela",
+                location="Remote, Kenya",
+                salary=180000,
+                job_type="Full-time",
+                requirements="Experience with AWS, Docker, Kubernetes, and CI/CD tools",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=45),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=employer_user.id
+            ),
+            JobPosting(
+                title="Data Analyst",
+                description="Analyze financial datasets and create dashboards",
+                company="KCB Bank",
+                location="Nairobi, Kenya",
+                salary=140000,
+                job_type="Full-time",
+                requirements="Experience with SQL, Python, and data visualization tools",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=admin_user.id
+            ),
+            # Uganda Jobs
+            JobPosting(
+                title="Network Engineer",
+                description="Manage LAN/WAN networks and troubleshoot issues",
+                company="MTN Uganda",
+                location="Kampala, Uganda",
+                salary=1200000,
+                job_type="Full-time",
+                requirements="CCNA/CCNP certification and 3+ years experience",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=45),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=employer_user.id
+            ),
+            JobPosting(
+                title="Software Developer",
+                description="Develop web applications in Django and React",
+                company="SafeBoda",
+                location="Kampala, Uganda",
+                salary=1500000,
+                job_type="Full-time",
+                requirements="2+ years experience with Django and React",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=admin_user.id
+            ),
+            # Tanzania Jobs
+            JobPosting(
+                title="System Administrator",
+                description="Manage servers and ensure uptime",
+                company="Vodacom Tanzania",
+                location="Dar es Salaam, Tanzania",
+                salary=1800000,
+                job_type="Full-time",
+                requirements="3+ years Linux/Windows server administration",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=employer_user.id
+            ),
+            # Rwanda Jobs
+            JobPosting(
+                title="Full Stack Developer",
+                description="Develop and maintain enterprise software",
+                company="Bank of Kigali",
+                location="Kigali, Rwanda",
+                salary=1800000,
+                job_type="Full-time",
+                requirements="3+ years full-stack development experience",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=45),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=admin_user.id
+            ),
+            # Ethiopia Jobs
+            JobPosting(
+                title="Software Engineer",
+                description="Develop banking software solutions",
+                company="Commercial Bank of Ethiopia",
+                location="Addis Ababa, Ethiopia",
+                salary=18000,
+                job_type="Full-time",
+                requirements="Degree in CS and 2+ years experience",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=employer_user.id
+            ),
+            # Non-tech jobs
+            JobPosting(
+                title="Sales Executive",
+                description="Manage client relationships and drive sales",
+                company="Jumia Kenya",
+                location="Nairobi, Kenya",
+                salary=70000,
+                job_type="Full-time",
+                requirements="1+ years sales experience",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=admin_user.id
+            ),
+            JobPosting(
+                title="Marketing Manager",
+                description="Lead marketing campaigns for new products",
+                company="Tusker Breweries",
+                location="Nairobi, Kenya",
+                salary=130000,
+                job_type="Full-time",
+                requirements="3+ years marketing experience",
+                deadline=datetime.datetime.utcnow() + datetime.timedelta(days=45),
+                posted_at=datetime.datetime.utcnow(),
+                admin_id=employer_user.id
+            )
+        ]
+        
+        db.session.add_all(job_postings)
         db.session.commit()
         print("JobPostings created.")
+
+        # Get the first few job postings for applications
+        frontend_job = job_postings[0]  # Frontend Developer
+        backend_job = job_postings[1]   # Backend Developer
+        data_analyst_job = job_postings[4]  # Data Analyst
 
         # Create Applications
         application1 = Application(
             user_id=user1.id,
-            job_posting_id=job_posting1.id,
+            job_posting_id=frontend_job.id,
             status="submitted",
             applied_at=datetime.datetime.utcnow()
         )
         application2 = Application(
             user_id=user2.id,
-            job_posting_id=job_posting1.id,
+            job_posting_id=frontend_job.id,
             status="viewed",
             applied_at=datetime.datetime.utcnow()
         )
         application3 = Application(
             user_id=user1.id,
-            job_posting_id=job_posting2.id,
+            job_posting_id=backend_job.id,
             status="submitted",
             applied_at=datetime.datetime.utcnow()
         )
-        db.session.add_all([application1, application2, application3])
+        application4 = Application(
+            user_id=user2.id,
+            job_posting_id=data_analyst_job.id,
+            status="reviewed",
+            applied_at=datetime.datetime.utcnow()
+        )
+        db.session.add_all([application1, application2, application3, application4])
         db.session.commit()
         print("Applications created.")
 
@@ -176,10 +322,16 @@ def seed_data():
         yesterday = today - datetime.timedelta(days=1)
         last_month = today.replace(day=1) - datetime.timedelta(days=1)
 
-        job_view1 = JobView(job_id=job_posting1.id, view_date=today, view_count=5)
-        job_view2 = JobView(job_id=job_posting1.id, view_date=yesterday, view_count=10)
-        job_view3 = JobView(job_id=job_posting2.id, view_date=today, view_count=3)
-        job_view4 = JobView(job_id=job_posting2.id, view_date=last_month, view_count=7)
+        # Get job postings for views
+        frontend_job = job_postings[0]  # Frontend Developer
+        backend_job = job_postings[1]   # Backend Developer
+        mobile_job = job_postings[2]    # Mobile App Developer
+
+        # Create views for job postings
+        job_view1 = JobView(job_id=frontend_job.id, view_date=today, view_count=5)
+        job_view2 = JobView(job_id=frontend_job.id, view_date=yesterday, view_count=10)
+        job_view3 = JobView(job_id=backend_job.id, view_date=today, view_count=3)
+        job_view4 = JobView(job_id=mobile_job.id, view_date=last_month, view_count=7)
 
         db.session.add_all([job_view1, job_view2, job_view3, job_view4])
         db.session.commit()
