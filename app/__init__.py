@@ -1,5 +1,5 @@
 import logging
-import os # Import the os module
+import os
 from flask import Flask, g, request, current_app
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from .extensions import db, migrate, jwt, metrics, cache, mail
@@ -23,31 +23,35 @@ def create_app(config_name):
 
     jwt.init_app(app)
 
-    cors_origins_str = os.environ.get('CORS_ORIGINS', '')
+    # Get CORS allowed origins from environment variable
+    cors_origins_str = os.environ.get('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
     CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
 
+    # Configure CORS with specific settings
     cors.init_app(app,
         resources={
             r"/api/*": {
-                "origins": CORS_ALLOWED_ORIGINS, # Back to list of strings
+                "origins": CORS_ALLOWED_ORIGINS,
                 "supports_credentials": True,
-                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+                "allow_headers": [
+                    "Content-Type",
+                    "Authorization",
+                    "X-Requested-With"
+                ],
                 "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-                "expose_headers": ["Content-Range", "X-Total-Count"],
+                "expose_headers": [
+                    "Content-Range",
+                    "X-Total-Count"
+                ],
                 "max_age": 600
             }
         },
         supports_credentials=True,
-        automatic_options=True)
+        automatic_options=True)  # Let flask_cors handle OPTIONS requests
 
-    # This function will dynamically set the Access-Control-Allow-Origin header
-    # for actual requests (GET, POST, etc.) when credentials are involved.
     @app.after_request
-    def handle_cors_for_credentials(response):
-        origin = request.headers.get('Origin')
-        if origin and origin in CORS_ALLOWED_ORIGINS:
-            response.headers['Access-Control-Allow-Origin'] = origin
-            response.headers['Access-Control-Allow-Credentials'] = 'true' # Ensure this is set if credentials are used
+    def add_security_headers(response):
+        # Add security headers if needed (not CORS related)
         return response
 
     @app.after_request
