@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, g, request, current_app
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request  # Add this import
 from .extensions import db, migrate, jwt, metrics, cache, mail
@@ -13,6 +14,7 @@ cors = CORS()  # Initialize the CORS object
 
 def create_app(config_name):
     app = Flask(__name__)
+    app.logger.setLevel(logging.INFO)
     app.config.from_object(config_by_name[config_name])  # Pass the class, not a string
     db.init_app(app)
     migrate.init_app(app, db)
@@ -111,6 +113,10 @@ def create_app(config_name):
     @app.route('/')
     def home():
         return "Welcome to RecruitConnect API"
+
+    @app.route('/favicon.ico')
+    def favicon():
+        return '', 204
 
     # Import and register error handlers
     #from .errors import register_error_handlers  # Make sure this exists in app/errors.py

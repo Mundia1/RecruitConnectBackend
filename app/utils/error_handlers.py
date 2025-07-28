@@ -1,8 +1,17 @@
 
 from flask import jsonify
 import structlog
+from marshmallow import ValidationError
 
 log = structlog.get_logger()
+
+def handle_marshmallow_validation_error(e):
+    if isinstance(e, ValidationError):
+        log.error("Marshmallow validation error", errors=e.messages, exc_info=True)
+        return jsonify(message="Validation error", errors=e.messages), 400
+    else:
+        log.error("An unexpected error occurred", exc_info=True)
+        return jsonify(message="An unexpected error occurred"), 500
 
 def register_error_handlers(app):
 

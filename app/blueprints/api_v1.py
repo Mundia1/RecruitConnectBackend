@@ -8,6 +8,7 @@ from app.resources.faq import faq_bp
 from app.resources.admin import admin_bp
 from app.resources.job_view import job_view_bp
 from app.resources.profile import profile_bp
+from app.resources.contact import contact_bp
 
 api_v1_bp = Blueprint("api_v1", __name__)
 
@@ -20,3 +21,4 @@ api_v1_bp.register_blueprint(faq_bp)
 api_v1_bp.register_blueprint(admin_bp)
 api_v1_bp.register_blueprint(job_view_bp)
 api_v1_bp.register_blueprint(profile_bp)
+api_v1_bp.register_blueprint(contact_bp)
