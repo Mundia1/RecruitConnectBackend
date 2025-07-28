@@ -24,22 +24,37 @@ def create_app(config_name):
     jwt.init_app(app)
     
     # Configure CORS with specific settings for development
+    CORS_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ]
+    
     cors.init_app(app,
         resources={
             r"/api/*": {
-                "origins": [
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173"
-                ],
+                "origins": CORS_ORIGINS,
                 "supports_credentials": True,
                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
                 "expose_headers": ["Content-Range", "X-Total-Count"],
                 "max_age": 600
             }
         },
         supports_credentials=True,
         automatic_options=True)
+    
+    # Ensure OPTIONS requests are handled for CORS
+    @app.before_request
+    def handle_options():
+        if request.method == 'OPTIONS':
+            response = current_app.make_default_options_response()
+            # Add CORS headers
+            response.headers['Access-Control-Allow-Origin'] = ', '.join(CORS_ORIGINS)
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Max-Age'] = '600'
+            return response
     
     # Add any additional headers that aren't CORS-related here
     @app.after_request
