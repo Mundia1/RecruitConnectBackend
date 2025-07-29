@@ -2,10 +2,26 @@ from app.models.application import Application
 from app.extensions import db
 from werkzeug.exceptions import NotFound
 from app.services.job_service import JobService
+from datetime import datetime
 
 class ApplicationService:
     @staticmethod
-    def create_application(user_id, job_posting_id, resume_path=None):
+    def create_application(user_id, job_posting_id, status='submitted'):
+        """
+        Create a new application record.
+        
+        Args:
+            user_id: ID of the user applying
+            job_posting_id: ID of the job being applied to
+            status: Initial status of the application (default: 'submitted')
+            
+        Returns:
+            The created Application object or None if creation failed
+            
+        Raises:
+            ValueError: If validation fails
+            NotFound: If job posting is not found
+        """
         # Validate input parameters
         if user_id is None:
             raise ValueError("User ID cannot be None")
@@ -13,31 +29,34 @@ class ApplicationService:
             raise ValueError("Job posting ID cannot be None")
             
         # Check for existing application
-        existing_application = Application.query.filter_by(user_id=user_id, job_posting_id=job_posting_id).first()
+        existing_application = Application.query.filter_by(
+            user_id=user_id, 
+            job_posting_id=job_posting_id
+        ).first()
+        
         if existing_application:
             return None
 
         # Check if the job exists and is not expired
-        try:
-            job = JobService.get_job_by_id(job_posting_id)
+        job = JobService.get_job_by_id(job_posting_id)
+        if not job:
+            raise NotFound(f"Job posting with ID {job_posting_id} not found")
             
-            # Check if job has expired
-            from datetime import datetime
-            if job.deadline and job.deadline < datetime.utcnow():
-                raise ValueError("Cannot apply to an expired job posting")
-            
-            # If we get here, the job exists and is not expired
-            application = Application(user_id=user_id, job_posting_id=job_posting_id, resume_path=resume_path)
-            db.session.add(application)
-            db.session.commit()
-            return application
-            
-        except ValueError as e:
-            # Re-raise validation errors
-            raise ValueError(str(e))
-        except NotFound as e:
-            # Re-raise with a more specific message
-            raise NotFound(f"Cannot create application: {str(e)}")
+        if job.deadline and job.deadline < datetime.utcnow():
+            raise ValueError("Cannot apply to an expired job posting")
+        
+        # Create and save the application
+        application = Application(
+            user_id=user_id,
+            job_posting_id=job_posting_id,
+            status=status,
+            applied_at=datetime.utcnow()
+        )
+        
+        db.session.add(application)
+        db.session.commit()
+        
+        return application
 
     @staticmethod
     def get_application_by_id(application_id):
