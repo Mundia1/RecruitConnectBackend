@@ -5,8 +5,6 @@ name = "pypi"
 
 [packages]
 python-dotenv = "*"
-
-# Flask
 flask = "*"
 flask-sqlalchemy = "~=3.0.3"
 flask-migrate = "*"
@@ -15,18 +13,12 @@ flask-bcrypt = "*"
 flask-cors = "*"
 flask-limiter = "*"
 flask-caching = "*"
-flask-mail = "*"
-
-# Database
 psycopg2-binary = "*"
 sqlalchemy = "~=2.0.23"
 alembic = "*"
 sqlalchemy-serializer = "*"
-
-# Serialization
 marshmallow = "*"
 marshmallow-sqlalchemy = "*"
-
 celery = "*"
 redis = "*"
 prometheus-flask-exporter = "*"

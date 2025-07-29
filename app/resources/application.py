@@ -15,32 +15,29 @@ applications_schema = ApplicationSchema(many=True)
 
 @application_bp.route('/', methods=['POST'])
 @jwt_required()
-def apply_for_job():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    job_posting_id = data.get('job_posting_id')
-    if not user_id or not job_posting_id:
-        return jsonify({"error": "Missing user_id or job_posting_id"}), 400
-
-    # Ensure the user making the request matches the JWT identity
+def create_application():
     current_user_id = get_jwt_identity()
-    if int(user_id) != int(current_user_id):
-        return jsonify({"error": "You can only apply as yourself."}), 403
-
-    # Check user role
-    user = User.query.get(user_id)
-    if not user or user.role.lower() != "job_seeker":
-        return jsonify({"error": "Only job seekers can apply for jobs."}), 403
-
-    # Prevent duplicate applications
-    existing = Application.query.filter_by(user_id=user_id, job_posting_id=job_posting_id).first()
-    if existing:
-        return jsonify({"error": "Application already exists"}), 400
-
-    application = Application(user_id=user_id, job_posting_id=job_posting_id)
-    db.session.add(application)
-    db.session.commit()
-    return jsonify({"message": "Application created"}), 201
+    data = request.get_json()
+    job_posting_id = data.get('job_posting_id')
+    if not job_posting_id:
+        return api_response(400, "Job posting ID is required")
+    try:
+        application = ApplicationService.create_application(current_user_id, job_posting_id)
+        if application is None:
+            return api_response(400, "Application already exists for this user and job")
+        # --- Notification logic here ---
+        from app.models.message import Notification
+        job = db.session.get(JobPosting, job_posting_id)
+        admin_id = job.admin_id
+        notification = Notification(
+            user_id=admin_id,
+            message=f"New application for job '{job.title}' from user {current_user_id}"
+        )
+        db.session.add(notification)
+        db.session.commit()
+        return api_response(201, "Application created successfully", application_schema.dump(application))
+    except ValueError as e:
+        return api_response(400, str(e))
 
 @application_bp.route('/<int:application_id>', methods=['GET'])
 def get_application(application_id):
@@ -50,18 +47,29 @@ def get_application(application_id):
     return api_response(200, "Application found", application_schema.dump(application))
 
 @application_bp.route('/<int:application_id>', methods=['PATCH'])
+@jwt_required()
 def update_application_status(application_id):
+    current_user_id = get_jwt_identity()
+    current_user = db.session.get(User, current_user_id)
+    if not current_user or current_user.role != 'admin':
+        return api_response(403, "Forbidden: Only Admins can update application status")
     data = request.get_json()
     status = data.get('status')
     if not status:
         return api_response(400, "Status is required")
     try:
         application = ApplicationService.update_application_status(application_id, status)
+        # --- Notification logic here ---
+        from app.models.message import Notification
+        notification = Notification(
+            user_id=application.user_id,
+            message=f"Your application status for job '{application.job_posting.title}' is now '{status}'"
+        )
+        db.session.add(notification)
+        db.session.commit()
+        return api_response(200, "Application status updated", application_schema.dump(application))
     except ValueError as e:
         return api_response(400, str(e))
-    if not application:
-        raise NotFound("Application not found")
-    return api_response(200, "Application status updated", application_schema.dump(application))
 
 @application_bp.route('/<int:application_id>', methods=['DELETE'])
 def delete_application(application_id):

@@ -22,27 +22,17 @@ def create_job_posting():
     if not current_user or current_user.role not in ['admin', 'employer']:
         return api_response(403, "Forbidden: Only Admins or Employers can create job postings")
 
-    print("create_job_posting function entered") # Debug print
     data = request.get_json()
-    print(f"Received data in resource: {data}") # Debug print
-    
-    # Log the raw data and its type
-    print(f"Raw data type: {type(data)}")
-    for key, value in data.items():
-        print(f"Key: {key}, Type: {type(value).__name__}, Value: {value}")
-    
-    # Validate the data
+    data['admin_id'] = current_user_id  # <-- Inject admin_id here
+
     errors = job_schema.validate(data)
     if errors:
-        print(f"Validation errors: {errors}") # Debug print
         return api_response(400, "Invalid data", errors)
-    
     try:
         job = JobService.create_job(data)
-        cache.clear() # Invalidate cache for all jobs
+        cache.clear()
         return api_response(201, "Job created successfully", job_schema.dump(job))
     except Exception as e:
-        print(f"Error creating job: {str(e)}")
         return api_response(500, "Error creating job", str(e))
 
 @job_bp.route('/', methods=['GET'])
@@ -77,3 +67,22 @@ def delete_job(job_id):
     if not result:
         return api_response(404, "Job not found")
     return api_response(204, "Job deleted")
+
+@job_bp.route('/post', methods=['POST'])
+@jwt_required()
+def post_job():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user.role != 'admin':
+        return {"error": "Only admins can post jobs."}, 403
+
+    data = request.get_json()
+    job = JobPosting(
+        title=data['title'],
+        description=data['description'],
+        admin_id=user_id,
+        # ...other fields...
+    )
+    db.session.add(job)
+    db.session.commit()
+    return {"message": "Job posted successfully."}, 201

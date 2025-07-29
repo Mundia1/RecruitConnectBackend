@@ -1,6 +1,6 @@
 from flask import Flask, g, request, current_app
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request  # Add this import
-from .extensions import db, migrate, jwt, metrics, cache, mail
+from .extensions import db, migrate, jwt, metrics, cache
 from flask_cors import CORS  # Add this import
 from .resources import register_resources
 from config import config_by_name  # Import the dictionary
@@ -8,8 +8,9 @@ from flask_limiter.util import get_remote_address  # Import get_remote_address
 from flask_limiter import Limiter  # Import Limiter
 import structlog  # Import structlog for logging
 from datetime import timedelta
+from flask_mail import Mail
 
-cors = CORS()  # Initialize the CORS object
+mail = Mail()
 
 def create_app(config_name):
     app = Flask(__name__)
@@ -22,22 +23,7 @@ def create_app(config_name):
     jwt.init_app(app)
     
     # Configure CORS with specific settings for development
-    cors.init_app(app,
-        resources={
-            r"/api/*": {
-                "origins": [
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173"
-                ],
-                "supports_credentials": True,
-                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                "expose_headers": ["Content-Range", "X-Total-Count"],
-                "max_age": 600
-            }
-        },
-        supports_credentials=True,
-        automatic_options=True)
+    CORS(app, supports_credentials=True, origins=["http://localhost:5173"])  # Allow frontend origin
     
     # Add any additional headers that aren't CORS-related here
     @app.after_request
@@ -122,3 +108,11 @@ from app.blueprints.api_v1 import api_v1_bp
 
 def register_resources(app):
     app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
+
+# Example config in app/__init__.py
+MAIL_SERVER = 'smtp.gmail.com'
+MAIL_PORT = 587
+MAIL_USE_TLS = True
+MAIL_USERNAME = 'your_email@gmail.com'
+MAIL_PASSWORD = 'your_app_password'  # Use an App Password, not your Gmail password
+MAIL_DEFAULT_SENDER = 'your_email@gmail.com'
