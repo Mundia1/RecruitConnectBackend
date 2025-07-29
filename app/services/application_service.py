@@ -5,7 +5,7 @@ from app.services.job_service import JobService
 
 class ApplicationService:
     @staticmethod
-    def create_application(user_id, job_posting_id):
+    def create_application(user_id, job_posting_id, resume_path=None):
         # Validate input parameters
         if user_id is None:
             raise ValueError("User ID cannot be None")
@@ -27,7 +27,7 @@ class ApplicationService:
                 raise ValueError("Cannot apply to an expired job posting")
             
             # If we get here, the job exists and is not expired
-            application = Application(user_id=user_id, job_posting_id=job_posting_id)
+            application = Application(user_id=user_id, job_posting_id=job_posting_id, resume_path=resume_path)
             db.session.add(application)
             db.session.commit()
             return application

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from app.extensions import db
 from app.models import Application
 from app.schemas.application import ApplicationSchema
@@ -8,6 +8,8 @@ from werkzeug.exceptions import NotFound
 from app.models.user import User
 from app.models.job import JobPosting
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from werkzeug.utils import secure_filename
+import os
 
 application_bp = Blueprint('application', __name__, url_prefix='/applications')
 application_schema = ApplicationSchema()
@@ -16,9 +18,16 @@ applications_schema = ApplicationSchema(many=True)
 @application_bp.route('/', methods=['POST'])
 @jwt_required()
 def apply_for_job():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    job_posting_id = data.get('job_posting_id')
+    if 'resume' not in request.files:
+        return jsonify({"error": "No resume file provided"}), 400
+
+    resume_file = request.files['resume']
+    if resume_file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    user_id = request.form.get('user_id')
+    job_posting_id = request.form.get('job_posting_id')
+
     if not user_id or not job_posting_id:
         return jsonify({"error": "Missing user_id or job_posting_id"}), 400
 
@@ -32,15 +41,20 @@ def apply_for_job():
     if not user or user.role.lower() != "job_seeker":
         return jsonify({"error": "Only job seekers can apply for jobs."}), 403
 
-    # Prevent duplicate applications
-    existing = Application.query.filter_by(user_id=user_id, job_posting_id=job_posting_id).first()
-    if existing:
-        return jsonify({"error": "Application already exists"}), 400
+    filename = secure_filename(resume_file.filename)
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    resume_path = os.path.join(upload_folder, filename)
+    resume_file.save(resume_path)
 
-    application = Application(user_id=user_id, job_posting_id=job_posting_id)
-    db.session.add(application)
-    db.session.commit()
-    return jsonify({"message": "Application created"}), 201
+    application = ApplicationService.create_application(user_id=user_id, job_posting_id=job_posting_id, resume_path=resume_path)
+    
+    if application:
+        return jsonify({"message": "Application created"}), 201
+    else:
+        # This case now correctly handles duplicate applications or other creation failures from the service
+        return jsonify({"error": "Application already exists or failed to create"}), 400
 
 @application_bp.route('/<int:application_id>', methods=['GET'])
 def get_application(application_id):

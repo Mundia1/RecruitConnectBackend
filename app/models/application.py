@@ -12,6 +12,7 @@ class Application(db.Model, SerializerMixin):
     status = db.Column(db.String(32), nullable=False, default='submitted') # Enum: submitted, viewed, rejected, accepted
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     job_posting_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=False)
+    resume_path = db.Column(db.String(256), nullable=True)  # Path to the uploaded resume
 
     user = db.relationship('User', backref=db.backref('applications', cascade='all, delete-orphan'))
     job_posting = db.relationship('JobPosting', backref=db.backref('applications', cascade='all, delete-orphan'))
