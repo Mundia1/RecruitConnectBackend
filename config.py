@@ -24,6 +24,7 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
     RATELIMIT_STORAGE_URL = os.getenv('RATELIMIT_STORAGE_URL', 'redis://localhost:6379/3')
     UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'uploads')
+    GOOGLE_FORM_URL = os.getenv('GOOGLE_FORM_URL', 'https://forms.gle/rSFpKsDLoh3pYgR8A')
 
 class DevelopmentConfig(Config):
     DEBUG = True

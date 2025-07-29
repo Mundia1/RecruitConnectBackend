@@ -62,7 +62,7 @@ def apply_for_job():
         return jsonify({
             "message": "Application submitted successfully",
             "application_id": application.id,
-            "google_form_url": current_app.config.get('GOOGLE_FORM_URL', '')  # Optional: Include Google Form URL
+            "google_form_url": current_app.config['GOOGLE_FORM_URL']
         }), 201
     else:
         return jsonify({"error": "Failed to create application"}), 400
