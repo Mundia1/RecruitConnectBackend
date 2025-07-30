@@ -24,7 +24,7 @@ def create_app(config_name):
     jwt.init_app(app)
 
     # Get CORS allowed origins from environment variable
-    cors_origins_str = os.environ.get('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+    cors_origins_str = os.environ.get('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173,https://recruit-connect-frontend.vercel.app/')
     CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
 
     # Configure CORS with specific settings
